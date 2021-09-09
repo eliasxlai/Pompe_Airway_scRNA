@@ -1,0 +1,369 @@
+---
+title: "RNASeq_Infantile_SCA7"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(DESeq2)
+library(apeglm)
+library(pheatmap)
+library(ggplot2)
+library(ggrepel)
+library(tidyverse)
+library(dplyr)
+library(gplots)
+library(RColorBrewer)
+library(genefilter)
+library(org.Mm.eg.db)
+library(pathview)
+library(gageData)
+library(gage)
+library(clusterProfiler)
+library(enrichplot)
+library(cowplot)
+library(Cairo)
+library(ComplexHeatmap)
+```
+
+```{r data, message = FALSE, warning = FALSE}
+data("go.sets.mm")
+data("go.subs.mm")
+data("kegg.sets.mm")
+data("sigmet.idx.mm")
+```
+
+```{r load-data+samplesheet, message = FALSE, warning = FALSE}
+sampletable <- read.table("sample_sheet_files/sample_sheet.txt",
+                          header=T, sep="\t") %>% 
+  arrange(match(Age, c("9w", "5w", "p")), Tissue,
+          match(Genotype, c("WT", "SCA7")))
+
+  
+rownames(sampletable) <- sampletable$SampleName
+
+dds <- DESeqDataSetFromHTSeqCount(sampleTable = sampletable,
+                        directory = "data/counts_4thcol/",
+                        design = ~ Genotype)
+```
+
+```{r variables, message = FALSE, warning = FALSE}
+keep <- rowSums(counts(dds)) >= 10
+dds <- dds[keep]
+dds <- DESeq(dds)
+
+res <- results(dds, alpha = 0.05)
+resOrdered <- res[order(res$padj),]
+resLFC <- lfcShrink(dds, coef="Genotype_WT_vs_SCA7", type="apeglm")
+vsd <- vst(dds, blind=FALSE)
+```
+
+```{r split-by-tissue, message = FALSE, warning = FALSE}
+#Cervical
+csc_sampletable <- read.table("sample_sheet_files/sample_sheet.txt",
+                          header=T, sep="\t") %>% 
+  arrange(match(Age, c("9w", "5w", "p")), Tissue,
+          match(Genotype, c("WT", "SCA7"))) %>% 
+  filter(Tissue == "csc")
+rownames(csc_sampletable) <- csc_sampletable$SampleName
+csc_dds <- DESeqDataSetFromHTSeqCount(sampleTable = csc_sampletable,
+                        directory = "data/counts_4thcol/",
+                        design = ~ Genotype)
+csc_dds <- DESeq(csc_dds[rowSums(counts(csc_dds)) >= 10])
+csc_res <- results(csc_dds, alpha = 0.05)
+csc_resOrdered <- csc_res[order(csc_res$padj),]
+csc_resLFC <- lfcShrink(csc_dds, coef="Genotype_WT_vs_SCA7", type="apeglm")
+csc_vsd <- vst(csc_dds, blind=FALSE)
+
+#Medulla
+med_sampletable <- read.table("sample_sheet_files/sample_sheet.txt",
+                          header=T, sep="\t") %>% 
+  arrange(match(Age, c("9w", "5w", "p")), Tissue,
+          match(Genotype, c("WT", "SCA7"))) %>% 
+  filter(Tissue == "med")
+rownames(med_sampletable) <- med_sampletable$SampleName
+med_dds <- DESeqDataSetFromHTSeqCount(sampleTable = med_sampletable,
+                        directory = "data/counts_4thcol/",
+                        design = ~ Genotype)
+med_dds <- DESeq(med_dds[rowSums(counts(med_dds)) >= 10])
+med_res <- results(med_dds, alpha = 0.05)
+med_resOrdered <- med_res[order(med_res$padj),]
+med_resLFC <- lfcShrink(med_dds, coef="Genotype_WT_vs_SCA7", type="apeglm")
+med_vsd <- vst(med_dds, blind=FALSE)
+```
+
+Number of genes left after low count (threshold is 10) filtering:
+
+```{r genes-after-filtering, message = TRUE, warning = FALSE}
+nrow(dds)
+```
+
+
+Number of genes with adjusted p-values less than 0.05:
+
+```{r genes-with-low-padj, message = TRUE, warning = FALSE}
+sum(res$padj < 0.05, na.rm = TRUE)
+```
+
+\newpage
+
+# MA-plot
+
+- Log2 fold change vs. Mean of Normalized Counts
+- shrunk results used (LFC)
+
+```{r MA-plot, fig.height4, fig.width=5, message = FALSE, warning = FALSE}
+plotMA(resLFC, ylim=c(-2,2), main = "MA-plot")
+```
+
+\newpage
+
+# Sample to sample distances
+
+- comparing medulla and cervical spinal cord
+
+```{r csc_ssdistance, fig.height=4, fig.width=5, message = FALSE, warning = FALSE}
+sampleDists <- dist(t(assay(csc_vsd)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(csc_vsd$Age, csc_vsd$Genotype, 
+                                    csc_vsd$Tissue, sep="-")
+colnames(sampleDistMatrix) <- paste(csc_vsd$Age, csc_vsd$Genotype, 
+                                    csc_vsd$Tissue, sep="-")
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors,
+         show_rownames = TRUE,
+         show_colnames = TRUE,
+         main = "Sample to Sample Distance (Cervical Spinal Cord)")
+```
+
+```{r med_ssdistance, fig.height=4, fig.width=5, message = FALSE, warning = FALSE}
+sampleDists <- dist(t(assay(med_vsd)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(med_vsd$Age, med_vsd$Genotype, 
+                                    med_vsd$Tissue, sep="-")
+colnames(sampleDistMatrix) <- paste(med_vsd$Age, med_vsd$Genotype, 
+                                    med_vsd$Tissue, sep="-")
+colors <- colorRampPalette( rev(brewer.pal(9, "Greens")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors,
+         show_rownames = TRUE,
+         show_colnames = TRUE,
+         main = "Sample to Sample Distance (Medulla)")
+```
+
+
+# Heatmap 1
+
+- Includes medulla and cervical spinal cord samples
+- Matrix based on normalized gene counts
+- Ordered by normalized gene counts (top 40 selected)
+- No distinction between WT and SCA7 mice
+
+```{r pheatmap-counts-counts, fig.height=12, fig.width=13, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+select <- order(rowMeans(counts(dds, normalized=TRUE)),
+                decreasing=TRUE)[1:40] #picks genes based on counts
+df <- as.data.frame(colData(dds)[c("Genotype", "Tissue", "Age")])
+pheatmap(assay(vsd)[select,], cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of count matrix")
+```
+
+\newpage
+
+# Heatmap 2
+
+- Includes medulla and cervical spinal cord samples
+- Matrix based on normalized gene counts
+- Ordered by adjusted p-value (top 40 selected)
+- Distinction between WT and SCA7 mice present, though not as clear as when 
+  matrix is based on z-score (deciphering which is a darker shade)
+
+```{r pheatmap-padj-counts-padj, fig.height=12, fig.width=13, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+select <- order(res$padj)[1:40] #picks genes based on adjusted p-value
+df <- as.data.frame(colData(dds)[c("Genotype", "Tissue", "Age")])
+pheatmap(assay(vsd)[select,], cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(1000),
+         annotation_colors = ann_colors,
+         main = "Heatmap of normalized counts")
+```
+
+\newpage
+  
+# Heatmap 3
+
+- Includes medulla and cervical spinal cord samples
+- Matrix based on z-score of normalized gene counts
+- Ordered by adjusted p-value (top 40 selected)
+- Distinction between WT and SCA7 mice present (much clearer than when matrix
+  was based on gene counts)
+
+```{r pheatmap-padj-zscore, fig.height=12, fig.width=13, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+df <- as.data.frame(colData(dds)[c("Genotype", "Tissue", "Age")])
+
+select <- order(res$padj)[1:40] #picks genes based on adjusted padj
+mat <- assay(vsd)[select,]
+zscore <- (mat - rowMeans(mat)) / rowSds(mat)
+pheatmap(zscore, cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of z-score")
+```
+
+\newpage
+
+# Heatmap 4
+
+- Only medulla samples
+- Matrix based on z-score of normalized gene counts
+- Ordered by adjusted p-value (top 40 selected)
+- Distinction between WT and SCA7 mice present
+
+```{r pheatmap-padj-zscore-med-40, fig.height=12, fig.width=13, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+df <- as.data.frame(colData(med_dds)[c("Genotype", "Age")])
+
+select <- order(med_res$padj)[1:40] #picks genes based on adjusted padj
+mat <- assay(med_vsd)[select,]
+zscore <- (mat - rowMeans(mat)) / rowSds(mat)
+pheatmap(zscore, cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of z-score (med)")
+```
+
+\newpage
+
+# Heatmap 5
+
+- Only cervical spinal cord samples
+- Matrix based on z-score of normalized gene counts
+- Ordered by adjusted p-value (top 40 selected)
+- Distinction between WT and SCA7 mice present
+
+```{r pheatmap-padj-zscore-csc-40, fig.height=12, fig.width=13, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+df <- as.data.frame(colData(csc_dds)[c("Genotype", "Age")])
+
+select <- order(csc_res$padj)[1:40] #picks genes based on adjusted padj
+mat <- assay(csc_vsd)[select,]
+zscore <- (mat - rowMeans(mat)) / rowSds(mat)
+pheatmap(zscore, cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of z-score (csc)")
+```
+
+\newpage
+
+# Heatmap 6
+
+- Only medulla samples
+- Ordered by adjusted p-value (top 100 selected)
+- On next page
+
+```{r pheatmap-padj-zscore-med-100, fig.height=22, fig.width=10, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+df <- as.data.frame(colData(med_dds)[c("Genotype", "Age")])
+
+select <- order(med_res$padj)[1:100] #picks genes based on adjusted padj
+mat <- assay(med_vsd)[select,]
+zscore <- (mat - rowMeans(mat)) / rowSds(mat)
+pheatmap(zscore, cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of z-score (med)")
+```
+
+\newpage
+
+# Heatmap 7
+
+- Only cervical spinal cord samples
+- Ordered by adjusted p-value (top 100 selected)
+- On next page
+
+```{r pheatmap-padj-zscore-csc-100, fig.height=22, fig.width=10, message = FALSE, warning = FALSE}
+#for annotation colors
+ann_colors = list(
+    Age = c("9w" = "#7570B3", "5w" = "#E7298A", "p" = "#66A61E"),
+    Tissue = c("csc" = "#1B9E77", "med" = "#D95F02"),
+    Genotype = c("WT" = "yellow", "SCA7" = "green")
+)
+
+df <- as.data.frame(colData(csc_dds)[c("Genotype", "Age")])
+
+select <- order(csc_res$padj)[1:100] #picks genes based on adjusted padj
+mat <- assay(csc_vsd)[select,]
+zscore <- (mat - rowMeans(mat)) / rowSds(mat)
+pheatmap(zscore, cluster_rows=FALSE, show_rownames = TRUE,
+         show_colnames = TRUE, cluster_cols=FALSE, annotation_col = df,
+         color = colorRampPalette(c("red", "white", "blue"))(100),
+         annotation_colors = ann_colors,
+         main = "Heatmap of z-score (csc)")
+```
+
+
+
+
+
