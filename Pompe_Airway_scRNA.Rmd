@@ -1,5 +1,5 @@
 ---
-title: "Sample_scRNA"
+title: "Pompe_Airway_scRNA"
 author: "Elias Lai"
 subtitle: ElMallah Lab, Duke University
 output:
@@ -15,50 +15,60 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 ```
 
 ```{r load-packages, message = FALSE, warning = FALSE}
-library(dplyr)
 library(Seurat)
-library(patchwork)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
-# Load the PBMC dataset
-pbmc.data <- Read10X(data.dir = "data/filtered_gene_bc_matrices/hg19/")
+# Load the gaa dataset
+gaa.data <- Read10X(data.dir = "data/gaa_KO/filtered_feature_bc_matrix/")
 # Initialize the Seurat object with the raw (non-normalized data)
-pbmc <- CreateSeuratObject(counts = pbmc.data, project = "pbmc3k",
-                           min.cells = 3, min.features = 200)
-pbmc
+gaa <- CreateSeuratObject(counts = gaa.data, min.cells = 1)
+gaa
 ```
 
 ```{r qc, message = FALSE, warning = FALSE}
 # Calculate the percentage of counts originating from a set of features (mitochondria) and creates/adds new column to object metadata
-pbmc[["percent.mt"]] <- PercentageFeatureSet(pbmc, pattern = "^MT-")
+gaa[["percent.mt"]] <- PercentageFeatureSet(gaa, pattern = "^MT-")
 # Visualize QC metrics as a violin plot
-VlnPlot(pbmc, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+VlnPlot(gaa, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
 # Use FeatureScatter to plot feature-feature relationships
-plot1 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "percent.mt")
-plot2 <- FeatureScatter(pbmc, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
-plot1 + plot2
+plot1 <- FeatureScatter(gaa, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(gaa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot3 <- FeatureScatter(gaa, feature1 = "nFeature_RNA", feature2 = "percent.mt")
+plot1 + plot2 + plot3
 # Filter cells that have unique feature counts >2500 and <200
 # Also filter cells that have >5% mitochondrial counts
-pbmc <- subset(pbmc, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & 
-                 percent.mt < 5)
+gaa <- subset(gaa, subset = nFeature_RNA > 200 & nFeature_RNA < 7500 & 
+                 percent.mt < 10)
 ```
 
 ```{r data normalization, message = FALSE, warning = FALSE}
 # Normalize feature expression measurements for each cell by total expression
 # Multiply the normalized data by a scale of 10,000, then log-transform the result
-pbmc <- NormalizeData(pbmc, normalization.method = "LogNormalize", 
+gaa <- NormalizeData(gaa, normalization.method = "LogNormalize", 
                       scale.factor = 10000)
 ```
 
 ```{r identification-of-highly-variable-features, message = FALSE, warning = FALSE}
 # Find the most variable genes
 # "Variable" means they are highly expressed in some cells and lowly expressed in others
-pbmc <- FindVariableFeatures(pbmc, selection.method = "vst", nfeatures = 2000)
+gaa <- FindVariableFeatures(gaa, selection.method = "vst", nfeatures = 2000)
 # Identify the 10 most highly variable genes
-top10 <- head(VariableFeatures(pbmc), 10)
+top10 <- head(VariableFeatures(gaa), 10)
 # plot variable features with and without labels
-plot1 <- VariableFeaturePlot(pbmc)
+plot1 <- VariableFeaturePlot(gaa)
 plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
 plot1 + plot2
 ```
@@ -68,32 +78,32 @@ plot1 + plot2
 # Make mean expression across cells 0
 # Makes variance across cells 1
 # 
-all.genes <- rownames(pbmc)
-pbmc <- ScaleData(pbmc, features = all.genes)
+all.genes <- rownames(gaa)
+gaa <- ScaleData(gaa, features = all.genes)
 ```
 
 ```{r linear-dimensional-reduction, warning=FALSE, message=FALSE}
 # Perform PCA on scaled data
 # Arrange by variability
-pbmc <- RunPCA(pbmc, features = VariableFeatures(object = pbmc))
+gaa <- RunPCA(gaa, features = VariableFeatures(object = gaa))
 # Visualizations of PCA
-print(pbmc[["pca"]], dims = 1:5, nfeatures = 5)
-VizDimLoadings(pbmc, dims = 1:2, reduction = "pca")
-DimPlot(pbmc, reduction = "pca")
-DimHeatmap(pbmc, dims = 1, cells = 500, balanced = TRUE)
-DimHeatmap(pbmc, dims = 1:15, cells = 500, balanced = TRUE)
+print(gaa[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(gaa, dims = 1:2, reduction = "pca")
+DimPlot(gaa, reduction = "pca")
+DimHeatmap(gaa, dims = 1, cells = 500, balanced = TRUE)
+DimHeatmap(gaa, dims = 1:15, cells = 500, balanced = TRUE)
 ```
 
 ```{r determine-dimensionality-of-dataset, warning=FALSE, message=FALSE}
 # Determine which and how many PCs to include
 # JackStraw permutes a subset of data (1% by default) and reruns PCA, constructing a 'null distribution' of features scores
 #ScoreJackStraw chooses the PCs with strong enrichment of low p-value features
-pbmc <- JackStraw(pbmc, num.replicate = 100)
-pbmc <- ScoreJackStraw(pbmc, dims = 1:20)
-JackStrawPlot(pbmc, dims = 1:15)
+gaa <- JackStraw(gaa, num.replicate = 100)
+gaa <- ScoreJackStraw(gaa, dims = 1:20)
+JackStrawPlot(gaa, dims = 1:15)
 #Alternative method (faster): use Elbow plot to rank PCs based on percentage of variance explained by each one
 # Most people choose this
-ElbowPlot(pbmc)
+ElbowPlot(gaa, ndims = 22)
 ```
 
 ```{r cluster-the-cells-, message=FALSE, warning=FALSE}
@@ -101,47 +111,49 @@ ElbowPlot(pbmc)
 # Resolution sets the ‘granularity’ of the downstream clustering, with increased values leading to a greater number of clusters
 # A resolution parameter between 0.4-1.2 typically returns good results for single-cell datasets of around 3K cells
 # Optimal resolution often increase for larger datasets
-pbmc <- FindNeighbors(pbmc, dims = 1:10)
-pbmc <- FindClusters(pbmc, resolution = 0.5)
-head(Idents(pbmc), 5)
+gaa <- FindNeighbors(gaa, dims = 1:22)
+gaa <- FindClusters(gaa, resolution = 0.5)
+head(Idents(gaa), 5)
 ```
 
 ```{r non-linear-dimensional-reduction-UMAP, message=FALSE, warning=FALSE}
 # Use the same number of PCs as above to do non-linear dimensional reduction
-pbmc <- RunUMAP(pbmc, dims = 1:10)
-DimPlot(pbmc, reduction = "umap")
+gaa <- RunUMAP(gaa, dims = 1:22)
+DimPlot(gaa, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(pbmc, file = "output/pbmc_tutorial.rds")
+saveRDS(gaa, file = "output/gaa_tutorial.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE}
 # Find differentially expressed features by: identifying positive and negative markers of a single cluster (specified in ident.1) compared to all other cells
 # find all markers of cluster 2
-cluster2.markers <- FindMarkers(pbmc, ident.1 = 2, min.pct = 0.25)
+cluster2.markers <- FindMarkers(gaa, ident.1 = 2, min.pct = 0.25)
 head(cluster2.markers, n = 5)
 # find all markers distinguishing cluster 5 from clusters 0 and 3
-cluster5.markers <- FindMarkers(pbmc, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
+cluster5.markers <- FindMarkers(gaa, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
 head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
-pbmc.markers <- FindAllMarkers(pbmc, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-pbmc.markers %>%
+gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gaa, file = "output/gaa_with_markers.rds")
+# gaa <- readRDS("output/gaa_with_markers.rds")
+gaa.markers %>%
     group_by(cluster) %>%
     slice_max(n = 2, order_by = avg_log2FC)
 # use ROC to return the ‘classification power’ for any individual marker (ranging from 0 - random, to 1 - perfect)
-cluster0.markers <- FindMarkers(pbmc, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+cluster0.markers <- FindMarkers(gaa, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
 # use violin plot to show expression probability distributions across clusters
-VlnPlot(pbmc, features = c("MS4A1", "CD79A"))
+VlnPlot(gaa, features = c("MS4A1", "CD79A"))
 # use violin plot to plot raw counts
-VlnPlot(pbmc, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
+VlnPlot(gaa, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
 # use FeaturePlot() to see UMAP for each gene
-FeaturePlot(pbmc, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", 
+FeaturePlot(gaa, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", 
                                "FCGR3A", "LYZ", "PPBP", "CD8A"))
 # use DoHeatmap() to make an expression heatmap for given cells and features
 # plot top 10 markers for each cluster
-pbmc.markers %>%
+gaa.markers %>%
     group_by(cluster) %>%
     top_n(n = 10, wt = avg_log2FC) -> top10
-DoHeatmap(pbmc, features = top10$gene) + NoLegend()
+DoHeatmap(gaa, features = top10$gene) + NoLegend()
 ```
 
 ```{r assign-cell-type-identity-to-clusters, message=FALSE, warning=FALSE}
@@ -149,11 +161,11 @@ DoHeatmap(pbmc, features = top10$gene) + NoLegend()
 # Fortunately in the case of this dataset, we can use canonical markers to easily match the unbiased clustering to known cell type
 new.cluster.ids <- c("Naive CD4 T", "CD14+ Mono", "Memory CD4 T", "B", "CD8 T", "FCGR3A+ Mono",
     "NK", "DC", "Platelet")
-names(new.cluster.ids) <- levels(pbmc)
-pbmc <- RenameIdents(pbmc, new.cluster.ids)
-DimPlot(pbmc, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
+names(new.cluster.ids) <- levels(gaa)
+gaa <- RenameIdents(gaa, new.cluster.ids)
+DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.5) + NoLegend()
 # Save final clustered and labeled UMAP
-saveRDS(pbmc, file = "output/pbmc3k_final.rds")
+saveRDS(gaa, file = "output/gaa3k_final.rds")
 ```
 
 
