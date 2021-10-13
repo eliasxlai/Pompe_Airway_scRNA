@@ -1,0 +1,267 @@
+---
+title: "ControlData"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(Seurat)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
+control_gcsubset <- readRDS("output/control_gcsubset.rds")
+```
+
+```{r create-object, message = FALSE, warning = FALSE}
+# Load the control dataset
+control.data <- Read10X(data.dir = "data/Control/filtered_feature_bc_matrix/")
+# Initialize the Seurat object with the raw (non-normalized data)
+control <- CreateSeuratObject(counts = control.data, min.cells = 1)
+control
+```
+
+```{r qc, message = FALSE, warning = FALSE}
+# Calculate the percentage of counts originating from a set of features (mitochondria) and creates/adds new column to object metadata
+control[["percent.mt"]] <- PercentageFeatureSet(control, pattern = "^MT-")
+# Visualize QC metrics as a violin plot
+VlnPlot(control, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# Use FeatureScatter to plot feature-feature relationships
+plot1 <- FeatureScatter(control, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(control, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot3 <- FeatureScatter(control, feature1 = "nFeature_RNA", feature2 = "percent.mt")
+plot1 + plot2 + plot3
+# Filter cells that have unique feature counts >2500 and <200
+# Also filter cells that have >5% mitochondrial counts
+control <- subset(control, subset = nFeature_RNA > 1200 & nFeature_RNA < 7500 &
+                    nCount_RNA < 25000 & percent.mt <10)
+```
+
+```{r data normalization, message = FALSE, warning = FALSE}
+# Normalize feature expression measurements for each cell by total expression
+# Multiply the normalized data by a scale of 10,000, then log-transform the result
+control <- NormalizeData(control, normalization.method = "LogNormalize", 
+                      scale.factor = 10000)
+```
+
+```{r identification-of-highly-variable-features, message = FALSE, warning = FALSE}
+# Find the most variable genes
+# "Variable" means they are highly expressed in some cells and lowly expressed in others
+control <- FindVariableFeatures(control, selection.method = "vst", nfeatures = 2000)
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(control), 10)
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(control)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1 + plot2
+```
+
+```{r scaling-data, warning=FALSE, message=FALSE}
+# Scale data
+# Make mean expression across cells 0
+# Makes variance across cells 1
+# 
+all.genes <- rownames(control)
+control <- ScaleData(control, features = all.genes)
+```
+
+```{r linear-dimensional-reduction, warning=FALSE, message=FALSE}
+# Perform PCA on scaled data
+# Arrange by variability
+control <- RunPCA(control, features = VariableFeatures(object = control))
+# Visualizations of PCA
+print(control[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(control, dims = 1:2, reduction = "pca")
+DimPlot(control, reduction = "pca")
+DimHeatmap(control, dims = 1, cells = 500, balanced = TRUE)
+DimHeatmap(control, dims = 1:15, cells = 500, balanced = TRUE)
+```
+
+```{r determine-dimensionality-of-dataset, warning=FALSE, message=FALSE}
+# Determine which and how many PCs to include
+# JackStraw permutes a subset of data (1% by default) and reruns PCA, constructing a 'null distribution' of features scores
+#ScoreJackStraw chooses the PCs with strong enrichment of low p-value features
+# control <- JackStraw(control, num.replicate = 100)
+# control <- ScoreJackStraw(control, dims = 1:20)
+# JackStrawPlot(control, dims = 1:15)
+#Alternative method (faster): use Elbow plot to rank PCs based on percentage of variance explained by each one
+# Most people choose this
+ElbowPlot(control, ndims = 30)
+```
+
+```{r cluster-the-cells-, message=FALSE, warning=FALSE}
+# Cluster the cells based on the number of PCs you chose in the previous step
+# Resolution sets the ‘granularity’ of the downstream clustering, with increased values leading to a greater number of clusters
+# A resolution parameter between 0.4-1.2 typically returns good results for single-cell datasets of around 3K cells
+# Optimal resolution often increase for larger datasets
+control <- FindNeighbors(control, dims = 1:20)
+control <- FindClusters(control, resolution = 0.5)
+head(Idents(control), 5)
+```
+
+```{r non-linear-dimensional-reduction-UMAP, message=FALSE, warning=FALSE}
+# Use the same number of PCs as above to do non-linear dimensional reduction
+control <- RunUMAP(object = control, dims = 1:20,min.dist = 1, n.neighbors = 40,
+                   spread = 5, local.connectivity = 20)
+DimPlot(control, reduction = "umap")
+# Save object so that you won't have to run the computationally intensive steps above
+saveRDS(control, file = "output/control.rds")
+```
+
+```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
+# Find differentially expressed features by: identifying positive and negative markers of a single cluster (specified in ident.1) compared to all other cells
+# find all markers of cluster 2
+cluster2.markers <- FindMarkers(control, ident.1 = 2, min.pct = 0.25)
+head(cluster2.markers, n = 5)
+# find all markers distinguishing cluster 5 from clusters 0 and 3
+cluster5.markers <- FindMarkers(control, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
+head(cluster5.markers, n = 5)
+# find markers for every cluster compared to all remaining cells, report only the positive ones
+control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(control.markers, file = "output/controlmarkers.rds")
+saveRDS(control, file = "output/control.rds")
+```
+
+```{r use-markers, message=FALSE, warning=FALSE}
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+filteredMarkers <- control.markers %>%
+  group_by(cluster) %>%
+  filter(p_val_adj < 0.01) %>% 
+  as.data.frame()
+write.csv(filteredMarkers, "markers/filtered_markers.csv", row.names = FALSE)
+# use ROC to return the ‘classification power’ for any individual marker (ranging from 0 - random, to 1 - perfect)
+# cluster0.markers <- FindMarkers(control, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+# use violin plot to show expression probability distributions across clusters
+VlnPlot(control, features = c("MS4A1", "CD79A"))
+# use violin plot to plot raw counts
+VlnPlot(control, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
+# use FeaturePlot() to see UMAP for each gene
+FeaturePlot(control, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", 
+                               "FCGR3A", "LYZ", "PPBP", "CD8A"))
+# use DoHeatmap() to make an expression heatmap for given cells and features
+# plot top 10 markers for each cluster
+control.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+DoHeatmap(control, features = top10$gene) + NoLegend()
+```
+
+```{r identify-broad-clusters, message=FALSE, warning=FALSE}
+control <- RenameIdents(control, 
+                    '7' = "Endothelial",
+                    '17' = "Endothelial",
+                    '16' = "Endothelial",
+                    '4' = "Endothelial",
+                    '2' = "Endothelial",
+                    '8' = "Endothelial",
+                    '14' = "Endothelial",
+                    '1' = "Mesenchyme",
+                    '0' = "Mesenchyme",
+                    '3' = "Mesenchyme",
+                    '5' = "Mesenchyme",
+                    '10' = "Mesenchyme",
+                    '13' = "Mesenchyme",
+                    '20' = "Immune",
+                    '19' = "Epithelial",
+                    '18' = "Epithelial",
+                    '11' = "Epithelial",
+                    '15' = "Epithelial",
+                    '9' = "Epithelial",
+                    '12' = "Mesothelial",
+                    '6' = "Mesothelial"
+                    )
+DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r identify-specific-clusters, message=FALSE, warning=FALSE}
+control <- RenameIdents(control, 
+                    '3' = "Interstitial Fibroblast", 
+                    '6' = "Mesothelial", 
+                    '12' = "Mesothelial",
+                    '14' = "Lymphatic Endothelial",
+                    '7' = "Capillary Endothelial", 
+                    '17' = "Capillary Endothelial", 
+                    '16' = "Capillary Endothelial", 
+                    '10' = "Smooth Muscle",
+                    '15' = "Type 2 Pneumocytes", 
+                    '9' = "Type 2 Pneumocytes", 
+                    '11' = "Ciliated", 
+                    '19' = "Goblet+Club", 
+                    '18' = "Type 1 Pneumocytes", 
+                    '20' = "Immune"
+                    )
+DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r controlsubset, message=FALSE, warning=FALSE}
+control_gcsubset <- subset(x = control, idents = "Goblet+Club")
+control_gcsubset <- NormalizeData(control_gcsubset, normalization.method = "LogNormalize", 
+                      scale.factor = 10000)
+control_gcsubset <- FindVariableFeatures(control_gcsubset, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(control_gcsubset)
+control_gcsubset <- ScaleData(control_gcsubset, features = all.genes)
+control_gcsubset <- RunPCA(control_gcsubset, 
+                       features = VariableFeatures(object = control_gcsubset))
+ElbowPlot(control_gcsubset, ndims = 30)
+control_gcsubset <- FindNeighbors(control_gcsubset, dims = 1:20)
+control_gcsubset <- FindClusters(control_gcsubset, resolution = 0.5)
+control_gcsubset <- RunUMAP(object = control_gcsubset, dims = 1:20,min.dist = 1, 
+                        n.neighbors = 40, spread = 5, local.connectivity = 20)
+control_gcsubset.markers <- FindAllMarkers(control_gcsubset, only.pos = TRUE, 
+                                       min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(control_gcsubset.markers, file = "output/control_gcsubsetmarkers.rds")
+saveRDS(control_gcsubset, file = "output/control_gcsubset.rds")
+FeaturePlot(control_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5", "Tp63"))
+```
+
+```{r confirmation, message=FALSE, warning=FALSE}
+# Cluster 3: Interstitial Fibroblast
+FeaturePlot(control, c("Col1a2", "Inmt", "Dcn"))
+# Cluster 5: Mesothelial
+FeaturePlot(control, c("Dcn", "Msln", "Wt1"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(control, c("Tmem100", "Ednrb", "Pecam1"))
+# Cluster 8: Smooth Muscle
+FeaturePlot(control, c("Acta2", "Myh11"))
+# Cluster 9: Type 2 Pneumocytes
+FeaturePlot(control, c("Sftpc", "Sftpd"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(control, c("Mmrn1", "Lyve1"))
+# Cluster 17: Ciliated
+FeaturePlot(control, c("Foxj1"))
+# Cluster 18: Goblet+Club
+FeaturePlot(control, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 1 Pneumocytes
+FeaturePlot(control, c("Rtkn2"))
+# Cluster 20: B
+FeaturePlot(control, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(control, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
+
+
+
+

@@ -1,0 +1,134 @@
+---
+title: "ControlData"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(Seurat)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+```
+
+```{r create-object, message = FALSE, warning = FALSE}
+control.data <- Read10X(data.dir = "data/Control/filtered_feature_bc_matrix/")
+control <- CreateSeuratObject(counts = control.data, min.cells = 1)
+
+control[["percent.mt"]] <- PercentageFeatureSet(control, pattern = "^MT-")
+VlnPlot(control, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+plot1 <- FeatureScatter(control, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(control, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot3 <- FeatureScatter(control, feature1 = "nFeature_RNA", feature2 = "percent.mt")
+plot1 + plot2 + plot3
+control <- subset(control, subset = nFeature_RNA > 1200 & nFeature_RNA < 7500 &
+                    nCount_RNA < 25000 & percent.mt <10)
+
+control <- NormalizeData(control, normalization.method = "LogNormalize", 
+                      scale.factor = 10000)
+control <- FindVariableFeatures(control, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(control)
+control <- ScaleData(control, features = all.genes)
+control <- RunPCA(control, features = VariableFeatures(object = control))
+ElbowPlot(control, ndims = 30)
+control <- FindNeighbors(control, dims = 1:20)
+control <- FindClusters(control, resolution = 0.5)
+control <- RunUMAP(object = control, dims = 1:20,min.dist = 1, n.neighbors = 40,
+                   spread = 5, local.connectivity = 20)
+saveRDS(control, file = "output/control.rds")
+
+control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(control.markers, file = "output/controlmarkers.rds")
+saveRDS(control, file = "output/control_with_markers.rds")
+
+control <- readRDS("output/control_with_markers.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+controlFilteredMarkers <- control.markers %>%
+  group_by(cluster) %>%
+  filter(p_val_adj < 0.01) %>% 
+  as.data.frame()
+write.csv(controlFilteredMarkers, "markers/controlFiltered_markers.csv", row.names = FALSE)
+# use ROC to return the ‘classification power’ for any individual marker (ranging from 0 - random, to 1 - perfect)
+# cluster0.markers <- FindMarkers(control, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+# use violin plot to show expression probability distributions across clusters
+VlnPlot(control, features = c("MS4A1", "CD79A"))
+# use violin plot to plot raw counts
+VlnPlot(control, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
+# use FeaturePlot() to see UMAP for each gene
+FeaturePlot(control, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", 
+                               "FCGR3A", "LYZ", "PPBP", "CD8A"))
+# use DoHeatmap() to make an expression heatmap for given cells and features
+# plot top 10 markers for each cluster
+control.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+DoHeatmap(control, features = top10$gene) + NoLegend()
+```
+
+```{r identify-clusters, message=FALSE, warning=FALSE}
+control <- RenameIdents(control, 
+                    '3' = "Interstitial Fibroblast", 
+                    '5' = "Mesothelial", 
+                    '6' = "Vcam1+ endothelial", 
+                    '7' = "Capillary Endothelial", 
+                    '12' = "Smooth Muscle", 
+                    '14' = "Lipofibroblast", 
+                    '15' = "Lymphatic endothelial", 
+                    '17' = "Ciliated", 
+                    '18' = "Goblet", 
+                    '19' = "Type 2 Pneumocytes", 
+                    '20' = "B", 
+                    '21' = "CD8+ T")
+DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r confirmation, message=FALSE, warning=FALSE}
+# Cluster 3: Interstitial Fibroblast
+FeaturePlot(control, c("Col1a2", "Inmt", "Dcn"))
+# Cluster 5: Mesothelial
+FeaturePlot(control, c("Dcn", "Msln"))
+# Cluster 6: Vcam1+ Endothelial
+FeaturePlot(control, c("Tmem100"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(control, c("Tmem100", "Ednrb"))
+# Cluster 12: Smooth Muscle
+FeaturePlot(control, c("Acta2"))
+# Cluster 14: Lipofibroblast
+FeaturePlot(control, c("Inmt"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(control, c("Mmrn1"))
+# Cluster 17: Ciliated
+FeaturePlot(control, c("Foxj1"))
+# Cluster 18: Goblet
+FeaturePlot(control, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 2 Pneumocytes
+FeaturePlot(control, c("Sftpd"))
+# Cluster 20: B
+FeaturePlot(control, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(control, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
+
+
+
+
