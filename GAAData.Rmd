@@ -125,7 +125,7 @@ head(Idents(gaa), 5)
 gaa <- RunUMAP(gaa, dims = 1:22)
 DimPlot(gaa, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-# saveRDS(gaa, file = "output/gaa_tutorial.rds")
+saveRDS(gaa, file = "output/gaa.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
@@ -141,6 +141,16 @@ gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.thresh
 saveRDS(gaa.markers, file = "output/gaamarkers.rds")
 saveRDS(gaa, file = "output/gaa.rds")
 ```
+
+```{r}
+gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(gaa.markers, file = "output/gaamarkers.rds")
+saveRDS(control.markers, file = "output/controlmarkers.rds")
+```
+
+
 
 ```{r use-markers, message=FALSE, warning=FALSE}
 gaa <- readRDS("output/gaa.rds")
@@ -197,11 +207,13 @@ DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 
 ```{r identify-specific-clusters, message=FALSE, warning=FALSE}
 gaa <- RenameIdents(gaa, 
-                    '3' = "Interstitial Fibroblast", 
+                    '2' = "Alveolar Fibroblast", 
+                    '3' = "Adventitial Fibroblast", 
                     '5' = "Mesothelial", 
                     '7' = "Capillary Endothelial", 
                     '8' = "Smooth Muscle",
                     '9' = "Type 2 Pneumocytes",
+                    '12' = "Pericytes",
                     '15' = "Lymphatic endothelial", 
                     '17' = "Ciliated", 
                     '18' = "Goblet+Club", 
@@ -233,7 +245,7 @@ FeaturePlot(gaa_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
 ```
 
 
-```{r confirmation, message=FALSE, warning=FALSE}
+```{r confirmation, message=FALSE, warning=FALSE, cache = TRUE}
 # Cluster 3: Interstitial Fibroblast
 FeaturePlot(gaa, c("Col1a2", "Inmt", "Dcn"))
 # Cluster 5: Mesothelial

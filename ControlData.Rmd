@@ -198,9 +198,11 @@ DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 
 ```{r identify-specific-clusters, message=FALSE, warning=FALSE}
 control <- RenameIdents(control, 
-                    '3' = "Interstitial Fibroblast", 
+                    '1' = "Alveolar Fibroblast",
+                    '3' = "Adventitial Fibroblast", 
                     '6' = "Mesothelial", 
                     '12' = "Mesothelial",
+                    '13' = "Pericytes",
                     '14' = "Lymphatic Endothelial",
                     '7' = "Capillary Endothelial", 
                     '17' = "Capillary Endothelial", 
