@@ -28,10 +28,10 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-control <- readRDS("output/control.rds")
-control.markers <- readRDS("output/controlmarkers.rds")
-control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
-control_gcsubset <- readRDS("output/control_gcsubset.rds")
+control <- readRDS("output.nosync/control.rds")
+control.markers <- readRDS("output.nosync/controlmarkers.rds")
+control_gcsubset.markers <- readRDS("output.nosync/control_gcsubsetmarkers.rds")
+control_gcsubset <- readRDS("output.nosync/control_gcsubset.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -126,7 +126,7 @@ control <- RunUMAP(object = control, dims = 1:20,min.dist = 1, n.neighbors = 40,
                    spread = 5, local.connectivity = 20)
 DimPlot(control, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(control, file = "output/control.rds")
+saveRDS(control, file = "output.nosync/control.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
@@ -140,13 +140,13 @@ head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
 control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
                                   logfc.threshold = 0.25)
-saveRDS(control.markers, file = "output/controlmarkers.rds")
-saveRDS(control, file = "output/control.rds")
+saveRDS(control.markers, file = "output.nosync/controlmarkers.rds")
+saveRDS(control, file = "output.nosync/control.rds")
 ```
 
 ```{r use-markers, message=FALSE, warning=FALSE}
-control <- readRDS("output/control.rds")
-control.markers <- readRDS("output/controlmarkers.rds")
+control <- readRDS("output.nosync/control.rds")
+control.markers <- readRDS("output.nosync/controlmarkers.rds")
 filteredMarkers <- control.markers %>%
   group_by(cluster) %>%
   filter(p_val_adj < 0.01) %>% 
@@ -234,8 +234,8 @@ control_gcsubset <- RunUMAP(object = control_gcsubset, dims = 1:20,min.dist = 1,
                         n.neighbors = 40, spread = 5, local.connectivity = 20)
 control_gcsubset.markers <- FindAllMarkers(control_gcsubset, only.pos = TRUE, 
                                        min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(control_gcsubset.markers, file = "output/control_gcsubsetmarkers.rds")
-saveRDS(control_gcsubset, file = "output/control_gcsubset.rds")
+saveRDS(control_gcsubset.markers, file = "output.nosync/control_gcsubsetmarkers.rds")
+saveRDS(control_gcsubset, file = "output.nosync/control_gcsubset.rds")
 FeaturePlot(control_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5", "Tp63"))
 ```
 
@@ -264,6 +264,34 @@ FeaturePlot(control, c("Cd79b", "Ptprc"))
 FeaturePlot(control, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```
 
-
+```{r reumap, message=FALSE, warning=FALSE, cache = TRUE}
+control <- FindClusters(control, resolution = 10)
+# Overall UMAP
+DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+# Fibroblast vs Endothelial
+FeaturePlot(control, c("Pdgfra", "Pecam1"))
+# Fibroblast vs Mesothelial
+FeaturePlot(control, c("Pdgfra", "Msln"))
+# Fibroblast vs Ciliated
+FeaturePlot(control, c("Pdgfra", "Foxj1"))
+# Fibroblast vs Type II Pneumocytes
+FeaturePlot(control, c("Pdgfra", "Sftpc"))
+# Fibroblast vs Capillary endothelial
+FeaturePlot(control, c("Pdgfra", "Ednrb"))
+# Fibroblast vs Immune
+FeaturePlot(control, c("Pdgfra", "Ptprc"))
+# Endothelial vs Type II Pneumocytes
+FeaturePlot(control, c("Pecam1", "Sftpc"))
+# Endothelial vs Ciliated
+FeaturePlot(control, c("Pecam1", "Foxj1"))
+# Endothelial vs Mesothelial
+FeaturePlot(control, c("Pecam1", "Msln"))
+# Endothelial vs Smooth muscle
+FeaturePlot(control, c("Pecam1", "Acta2"))
+# Endothelial vs Pericytes
+FeaturePlot(control, c("Pecam1", "Hhip"))
+# Endothelial vs Type I Pneumocytes
+FeaturePlot(control, c("Pecam1", "Rtkn2"))
+```
 
 

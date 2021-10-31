@@ -28,10 +28,10 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-gaa <- readRDS("output/gaa.rds")
-gaa.markers <- readRDS("output/gaamarkers.rds")
-gaa_gcsubset.markers <- readRDS("output/gaa_gcsubsetmarkers.rds")
-gaa_gcsubset <- readRDS("output/gaa_gcsubset.rds")
+gaa <- readRDS("output.nosync/gaa.rds")
+gaa.markers <- readRDS("output.nosync/gaamarkers.rds")
+gaa_gcsubset.markers <- readRDS("output.nosync/gaa_gcsubsetmarkers.rds")
+gaa_gcsubset <- readRDS("output.nosync/gaa_gcsubset.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -125,7 +125,7 @@ head(Idents(gaa), 5)
 gaa <- RunUMAP(gaa, dims = 1:22)
 DimPlot(gaa, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(gaa, file = "output/gaa.rds")
+saveRDS(gaa, file = "output.nosync/gaa.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
@@ -138,23 +138,23 @@ cluster5.markers <- FindMarkers(gaa, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0
 head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output/gaamarkers.rds")
-saveRDS(gaa, file = "output/gaa.rds")
+saveRDS(gaa.markers, file = "output.nosync/gaamarkers.rds")
+saveRDS(gaa, file = "output.nosync/gaa.rds")
 ```
 
 ```{r}
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
                                   logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output/gaamarkers.rds")
-saveRDS(control.markers, file = "output/controlmarkers.rds")
+saveRDS(gaa.markers, file = "output.nosync/gaamarkers.rds")
+saveRDS(control.markers, file = "output.nosync/controlmarkers.rds")
 ```
 
 
 
 ```{r use-markers, message=FALSE, warning=FALSE}
-gaa <- readRDS("output/gaa.rds")
-gaa.markers <- readRDS("output/gaamarkers.rds")
+gaa <- readRDS("output.nosync/gaa.rds")
+gaa.markers <- readRDS("output.nosync/gaamarkers.rds")
 gaaFilteredMarkers <- gaa.markers %>%
   group_by(cluster) %>%
   filter(p_val_adj < 0.01) %>% 
@@ -239,8 +239,8 @@ gaa_gcsubset <- RunUMAP(object = gaa_gcsubset, dims = 1:20,min.dist = 1,
                         n.neighbors = 40, spread = 5, local.connectivity = 20)
 gaa_gcsubset.markers <- FindAllMarkers(gaa_gcsubset, only.pos = TRUE, 
                                        min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa_gcsubset.markers, file = "output/gaa_gcsubsetmarkers.rds")
-saveRDS(gaa_gcsubset, file = "output/gaa_gcsubset.rds")
+saveRDS(gaa_gcsubset.markers, file = "output.nosync/gaa_gcsubsetmarkers.rds")
+saveRDS(gaa_gcsubset, file = "output.nosync/gaa_gcsubset.rds")
 FeaturePlot(gaa_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
 ```
 
@@ -270,6 +270,21 @@ FeaturePlot(gaa, c("Cd79b", "Ptprc"))
 FeaturePlot(gaa, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```
 
+```{r reumap, message=FALSE, warning=FALSE, cache = TRUE}
+gaa <- FindClusters(gaa, resolution = 10)
+# Overall UMAP
+DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+# Type II vs Fibroblast
+FeaturePlot(gaa, c("Sftpc", "Pdgfra"))
+# Mesothelial vs Fibroblast
+FeaturePlot(gaa, c("Pdgfra", "Msln"))
+# Mesothelial vs Endothelial
+FeaturePlot(gaa, c("Pecam1", "Msln"))
+# Fibroblast vs Pericytes
+FeaturePlot(gaa, c("Hhip", "Pdgfra"))
+# Interstitial Fibroblast vs Capillary Endothelial
+FeaturePlot(gaa, c("Hhip", "Pdgfra"))
+```
 
 
 
