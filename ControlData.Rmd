@@ -33,6 +33,7 @@ control <- readRDS("output.nosync/control.rds")
 control.markers <- readRDS("output.nosync/controlmarkers.rds")
 control_gcsubset.markers <- readRDS("output.nosync/control_gcsubsetmarkers.rds")
 control_gcsubset <- readRDS("output.nosync/control_gcsubset.rds")
+control_withoutdoublets <- readRDS("output.nosync/control_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -293,6 +294,14 @@ FeaturePlot(control, c("Pecam1", "Acta2"))
 FeaturePlot(control, c("Pecam1", "Hhip"))
 # Endothelial vs Type I Pneumocytes
 FeaturePlot(control, c("Pecam1", "Rtkn2"))
+```
+
+```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
+# without 94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 59, 90, 56, 58, 75, 74, 57, 93, 55
+control_rm_clusters <- c(94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 
+                     59, 90, 56, 58, 75, 74, 57, 93, 55)
+control_withoutdoublets <- subset(x = control, idents = control_rm_clusters, invert = TRUE)
+saveRDS(control_withoutdoublets, file = "output.nosync/control_withoutdoublets.rds")
 ```
 
 
