@@ -38,7 +38,7 @@ control_withoutdoublets <- readRDS("output.nosync/control_withoutdoublets.rds")
 
 ```{r create-object, message = FALSE, warning = FALSE}
 # Load the control dataset
-control.data <- Read10X(data.dir = "data/Control/filtered_feature_bc_matrix/")
+control.data <- Read10X(data.dir = "data/Control/outs/filtered_feature_bc_matrix/")
 # Initialize the Seurat object with the raw (non-normalized data)
 control <- CreateSeuratObject(counts = control.data, min.cells = 1)
 control

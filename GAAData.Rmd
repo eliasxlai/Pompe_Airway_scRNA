@@ -38,7 +38,7 @@ gaa_withoutdoublets <- readRDS("output.nosync/gaa_withoutdoublets.rds")
 
 ```{r create-object, message = FALSE, warning = FALSE}
 # Load the gaa dataset
-gaa.data <- Read10X(data.dir = "data/gaa_KO/filtered_feature_bc_matrix/")
+gaa.data <- Read10X(data.dir = "data/GAA_KO/outs/filtered_feature_bc_matrix/")
 # Initialize the Seurat object with the raw (non-normalized data)
 gaa <- CreateSeuratObject(counts = gaa.data, min.cells = 1)
 gaa
