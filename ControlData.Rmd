@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 ```
 
 ```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
 library(Seurat)
 library(dplyr)
 library(Matrix)

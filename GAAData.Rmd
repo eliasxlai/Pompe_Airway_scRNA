@@ -15,6 +15,7 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 ```
 
 ```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
 library(Seurat)
 library(dplyr)
 library(Matrix)
@@ -32,6 +33,7 @@ gaa <- readRDS("output.nosync/gaa.rds")
 gaa.markers <- readRDS("output.nosync/gaamarkers.rds")
 gaa_gcsubset.markers <- readRDS("output.nosync/gaa_gcsubsetmarkers.rds")
 gaa_gcsubset <- readRDS("output.nosync/gaa_gcsubset.rds")
+gaa_withoutdoublets <- readRDS("output.nosync/gaa_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -285,7 +287,12 @@ FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 # Interstitial Fibroblast vs Capillary Endothelial
 FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 ```
-
+```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
+# without 55, 66, 85, 88, 91, 96
+gaa_rm_clusters <- c(55, 66, 85, 88, 91, 96)
+gaa_withoutdoublets <- subset(x = gaa, idents = gaa_rm_clusters, invert = TRUE)
+saveRDS(gaa_withoutdoublets, file = "output.nosync/gaa_withoutdoublets.rds")
+```
 
 
 
