@@ -297,9 +297,9 @@ FeaturePlot(control, c("Pecam1", "Rtkn2"))
 ```
 
 ```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
-# without 94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 59, 90, 56, 58, 75, 74, 57, 93, 55
+# without 94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 59, 90, 56, 58, 75, 74, 57, 93, 55, 98
 control_rm_clusters <- c(94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 
-                     59, 90, 56, 58, 75, 74, 57, 93, 55)
+                     59, 90, 56, 58, 75, 74, 57, 93, 55, 98)
 control_withoutdoublets <- subset(x = control, idents = control_rm_clusters, invert = TRUE)
 saveRDS(control_withoutdoublets, file = "output.nosync/control_withoutdoublets.rds")
 ```
@@ -308,6 +308,21 @@ saveRDS(control_withoutdoublets, file = "output.nosync/control_withoutdoublets.r
 control_withoutdoublets <- FindNeighbors(control_withoutdoublets, dims = 1:20)
 control_withoutdoublets <- FindClusters(control_withoutdoublets, resolution = 0.5)
 # Overall UMAP
+DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+control_withoutdoublets <- RenameIdents(control_withoutdoublets, 
+                    '6' = "Capillary Endothelial",
+                    '13' = "Capillary Endothelial",
+                    '12' = "Lymphatic Endothelial",
+                    '10' = "Smooth Muscle",
+                    '11' = "Pericyte",
+                    '9' = "Type II Pneumocyte",
+                    '15' = "Type I Pneumocyte",
+                    '14' = "Ciliated",
+                    '5' = "Mesothelial",
+                    '3' = "Adventitial Fibroblast",
+                    '8' = "Adventitial Fibroblast",
+                    '0' = "Alveolar Fibroblast",
+                    '16' = "Goblet+Club+Basal")
 DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
