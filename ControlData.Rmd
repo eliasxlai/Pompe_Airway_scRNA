@@ -304,4 +304,12 @@ control_withoutdoublets <- subset(x = control, idents = control_rm_clusters, inv
 saveRDS(control_withoutdoublets, file = "output.nosync/control_withoutdoublets.rds")
 ```
 
+```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}
+control_withoutdoublets <- FindNeighbors(control_withoutdoublets, dims = 1:20)
+control_withoutdoublets <- FindClusters(control_withoutdoublets, resolution = 0.5)
+# Overall UMAP
+DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+
 

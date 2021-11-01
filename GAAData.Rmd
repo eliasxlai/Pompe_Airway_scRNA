@@ -294,5 +294,28 @@ gaa_withoutdoublets <- subset(x = gaa, idents = gaa_rm_clusters, invert = TRUE)
 saveRDS(gaa_withoutdoublets, file = "output.nosync/gaa_withoutdoublets.rds")
 ```
 
+```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}
+gaa_withoutdoublets <- FindNeighbors(gaa_withoutdoublets, dims = 1:20)
+gaa_withoutdoublets <- FindClusters(gaa_withoutdoublets, resolution = 0.5)
+# Overall UMAP
+DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+gaa_withoutdoublets <- RenameIdents(gaa_withoutdoublets, 
+                    '3' = "Alveolar Fibroblast",
+                    '0' = "Adventitial Fibroblast",
+                    '5' = "Mesothelial",
+                    '16' = "Goblet+Club+Basal",
+                    '17' = "Type I Pneumocyte",
+                    '10' = "Type II Pneumocyte",
+                    '14' = "Type II Pneumocyte",
+                    '18' = "Immune",
+                    '19' = "Immune",
+                    '8' = "Capillary Endothelial",
+                    '13' = "Lymphatic Endothelial",
+                    '9' = "Smooth Muscle",
+                    '11' = "Pericyte",
+                    '15' = "Ciliated")
+DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
 
 
