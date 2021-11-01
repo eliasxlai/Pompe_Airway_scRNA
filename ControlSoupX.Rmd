@@ -326,6 +326,11 @@ control_withoutdoublets <- RenameIdents(control_withoutdoublets,
 DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
+```{r soupx, message=FALSE, warning=FALSE, cache = TRUE}
+
+saveRDS(control_withoutdoublets, file = "output.nosync/control_withoutdoublets.rds")
+```
+
 
 
 

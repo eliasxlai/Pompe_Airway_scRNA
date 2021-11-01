@@ -1,0 +1,321 @@
+---
+title: "GAAData"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(Seurat)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+gaa <- readRDS("output.nosync/gaa.rds")
+gaa.markers <- readRDS("output.nosync/gaamarkers.rds")
+gaa_gcsubset.markers <- readRDS("output.nosync/gaa_gcsubsetmarkers.rds")
+gaa_gcsubset <- readRDS("output.nosync/gaa_gcsubset.rds")
+gaa_withoutdoublets <- readRDS("output.nosync/gaa_withoutdoublets.rds")
+```
+
+```{r create-object, message = FALSE, warning = FALSE}
+# Load the gaa dataset
+gaa.data <- Read10X(data.dir = "data/gaa_KO/filtered_feature_bc_matrix/")
+# Initialize the Seurat object with the raw (non-normalized data)
+gaa <- CreateSeuratObject(counts = gaa.data, min.cells = 1)
+gaa
+```
+
+```{r qc, message = FALSE, warning = FALSE}
+# Calculate the percentage of counts originating from a set of features (mitochondria) and creates/adds new column to object metadata
+gaa[["percent.mt"]] <- PercentageFeatureSet(gaa, pattern = "^MT-")
+# Visualize QC metrics as a violin plot
+VlnPlot(gaa, features = c("nFeature_RNA", "nCount_RNA", "percent.mt"), ncol = 3)
+# Use FeatureScatter to plot feature-feature relationships
+plot1 <- FeatureScatter(gaa, feature1 = "nCount_RNA", feature2 = "percent.mt")
+plot2 <- FeatureScatter(gaa, feature1 = "nCount_RNA", feature2 = "nFeature_RNA")
+plot3 <- FeatureScatter(gaa, feature1 = "nFeature_RNA", feature2 = "percent.mt")
+plot1 + plot2 + plot3
+# Filter cells that have unique feature counts >2500 and <200
+# Also filter cells that have >5% mitochondrial counts
+gaa <- subset(gaa, subset = nFeature_RNA > 200 & nFeature_RNA < 7500 & 
+                 percent.mt < 10)
+```
+
+```{r data normalization, message = FALSE, warning = FALSE}
+# Normalize feature expression measurements for each cell by total expression
+# Multiply the normalized data by a scale of 10,000, then log-transform the result
+gaa <- NormalizeData(gaa, normalization.method = "LogNormalize", 
+                      scale.factor = 10000)
+```
+
+```{r identification-of-highly-variable-features, message = FALSE, warning = FALSE}
+# Find the most variable genes
+# "Variable" means they are highly expressed in some cells and lowly expressed in others
+gaa <- FindVariableFeatures(gaa, selection.method = "vst", nfeatures = 2000)
+# Identify the 10 most highly variable genes
+top10 <- head(VariableFeatures(gaa), 10)
+# plot variable features with and without labels
+plot1 <- VariableFeaturePlot(gaa)
+plot2 <- LabelPoints(plot = plot1, points = top10, repel = TRUE)
+plot1 + plot2
+```
+
+```{r scaling-data, warning=FALSE, message=FALSE}
+# Scale data
+# Make mean expression across cells 0
+# Makes variance across cells 1
+# 
+all.genes <- rownames(gaa)
+gaa <- ScaleData(gaa, features = all.genes)
+```
+
+```{r linear-dimensional-reduction, warning=FALSE, message=FALSE}
+# Perform PCA on scaled data
+# Arrange by variability
+gaa <- RunPCA(gaa, features = VariableFeatures(object = gaa))
+# Visualizations of PCA
+print(gaa[["pca"]], dims = 1:5, nfeatures = 5)
+VizDimLoadings(gaa, dims = 1:2, reduction = "pca")
+DimPlot(gaa, reduction = "pca")
+DimHeatmap(gaa, dims = 1, cells = 500, balanced = TRUE)
+DimHeatmap(gaa, dims = 1:15, cells = 500, balanced = TRUE)
+```
+
+```{r determine-dimensionality-of-dataset, warning=FALSE, message=FALSE}
+# Determine which and how many PCs to include
+# JackStraw permutes a subset of data (1% by default) and reruns PCA, constructing a 'null distribution' of features scores
+#ScoreJackStraw chooses the PCs with strong enrichment of low p-value features
+# gaa <- JackStraw(gaa, num.replicate = 100)
+# gaa <- ScoreJackStraw(gaa, dims = 1:20)
+# JackStrawPlot(gaa, dims = 1:15)
+#Alternative method (faster): use Elbow plot to rank PCs based on percentage of variance explained by each one
+# Most people choose this
+ElbowPlot(gaa, ndims = 30)
+```
+
+```{r cluster-the-cells-, message=FALSE, warning=FALSE}
+# Cluster the cells based on the number of PCs you chose in the previous step
+# Resolution sets the ‘granularity’ of the downstream clustering, with increased values leading to a greater number of clusters
+# A resolution parameter between 0.4-1.2 typically returns good results for single-cell datasets of around 3K cells
+# Optimal resolution often increase for larger datasets
+gaa <- FindNeighbors(gaa, dims = 1:22)
+gaa <- FindClusters(gaa, resolution = 0.5)
+head(Idents(gaa), 5)
+```
+
+```{r non-linear-dimensional-reduction-UMAP, message=FALSE, warning=FALSE}
+# Use the same number of PCs as above to do non-linear dimensional reduction
+gaa <- RunUMAP(gaa, dims = 1:22)
+DimPlot(gaa, reduction = "umap")
+# Save object so that you won't have to run the computationally intensive steps above
+saveRDS(gaa, file = "output.nosync/gaa.rds")
+```
+
+```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
+# Find differentially expressed features by: identifying positive and negative markers of a single cluster (specified in ident.1) compared to all other cells
+# find all markers of cluster 2
+cluster2.markers <- FindMarkers(gaa, ident.1 = 2, min.pct = 0.25)
+head(cluster2.markers, n = 5)
+# find all markers distinguishing cluster 5 from clusters 0 and 3
+cluster5.markers <- FindMarkers(gaa, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0.25)
+head(cluster5.markers, n = 5)
+# find markers for every cluster compared to all remaining cells, report only the positive ones
+gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gaa.markers, file = "output.nosync/gaamarkers.rds")
+saveRDS(gaa, file = "output.nosync/gaa.rds")
+```
+
+```{r}
+gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(gaa.markers, file = "output.nosync/gaamarkers.rds")
+saveRDS(control.markers, file = "output.nosync/controlmarkers.rds")
+```
+
+
+
+```{r use-markers, message=FALSE, warning=FALSE}
+gaa <- readRDS("output.nosync/gaa.rds")
+gaa.markers <- readRDS("output.nosync/gaamarkers.rds")
+gaaFilteredMarkers <- gaa.markers %>%
+  group_by(cluster) %>%
+  filter(p_val_adj < 0.01) %>% 
+  as.data.frame()
+write.csv(gaaFilteredMarkers, "markers/gaa_filtered_markers.csv", row.names = FALSE)
+# use ROC to return the ‘classification power’ for any individual marker (ranging from 0 - random, to 1 - perfect)
+# cluster0.markers <- FindMarkers(gaa, ident.1 = 0, logfc.threshold = 0.25, test.use = "roc", only.pos = TRUE)
+# use violin plot to show expression probability distributions across clusters
+VlnPlot(gaa, features = c("MS4A1", "CD79A"))
+# use violin plot to plot raw counts
+VlnPlot(gaa, features = c("NKG7", "PF4"), slot = "counts", log = TRUE)
+# use FeaturePlot() to see UMAP for each gene
+FeaturePlot(gaa, features = c("MS4A1", "GNLY", "CD3E", "CD14", "FCER1A", 
+                               "FCGR3A", "LYZ", "PPBP", "CD8A"))
+# use DoHeatmap() to make an expression heatmap for given cells and features
+# plot top 10 markers for each cluster
+gaa.markers %>%
+    group_by(cluster) %>%
+    top_n(n = 10, wt = avg_log2FC) -> top10
+DoHeatmap(gaa, features = top10$gene) + NoLegend()
+```
+
+```{r identify-specific-clusters, message=FALSE, warning=FALSE}
+gaa <- RenameIdents(gaa, 
+                    '5' = "Mesothelial",
+                    '17' = "Epithelial",
+                    '18' = "Epithelial",
+                    '19' = "Epithelial",
+                    '16' = "Epithelial",
+                    '9' = "Epithelial",
+                    '21' = "Immune",
+                    '20' = "Immune",
+                    '2' = "Mesenchyme",
+                    '4' = "Mesenchyme",
+                    '0' = "Mesenchyme",
+                    '11' = "Mesenchyme",
+                    '3' = "Mesenchyme",
+                    '8' = "Mesenchyme",
+                    '12' = "Mesenchyme",
+                    '15' = "Endothelial",
+                    '14' = "Endothelial",
+                    '6' = "Endothelial",
+                    '10' = "Endothelial",
+                    '13' = "Endothelial",
+                    '1' = "Endothelial",
+                    '7' = "Endothelial"
+                    )
+DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r identify-specific-clusters, message=FALSE, warning=FALSE}
+gaa <- RenameIdents(gaa, 
+                    '2' = "Alveolar Fibroblast", 
+                    '3' = "Adventitial Fibroblast", 
+                    '5' = "Mesothelial", 
+                    '7' = "Capillary Endothelial", 
+                    '8' = "Smooth Muscle",
+                    '9' = "Type 2 Pneumocytes",
+                    '12' = "Pericytes",
+                    '15' = "Lymphatic endothelial", 
+                    '17' = "Ciliated", 
+                    '18' = "Goblet+Club", 
+                    '19' = "Type 1 Pneumocytes", 
+                    '20' = "Immune", 
+                    '21' = "Immune")
+DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r gaasubset, message=FALSE, warning=FALSE}
+gaa_gcsubset <- subset(x = gaa, idents = "Goblet+Club")
+gaa_gcsubset <- NormalizeData(gaa_gcsubset, normalization.method = "LogNormalize", 
+                      scale.factor = 10000)
+gaa_gcsubset <- FindVariableFeatures(gaa_gcsubset, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gaa_gcsubset)
+gaa_gcsubset <- ScaleData(gaa_gcsubset, features = all.genes)
+gaa_gcsubset <- RunPCA(gaa_gcsubset, 
+                       features = VariableFeatures(object = gaa_gcsubset))
+ElbowPlot(gaa_gcsubset, ndims = 30)
+gaa_gcsubset <- FindNeighbors(gaa_gcsubset, dims = 1:20)
+gaa_gcsubset <- FindClusters(gaa_gcsubset, resolution = 0.5)
+gaa_gcsubset <- RunUMAP(object = gaa_gcsubset, dims = 1:20,min.dist = 1, 
+                        n.neighbors = 40, spread = 5, local.connectivity = 20)
+gaa_gcsubset.markers <- FindAllMarkers(gaa_gcsubset, only.pos = TRUE, 
+                                       min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gaa_gcsubset.markers, file = "output.nosync/gaa_gcsubsetmarkers.rds")
+saveRDS(gaa_gcsubset, file = "output.nosync/gaa_gcsubset.rds")
+FeaturePlot(gaa_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
+```
+
+
+```{r confirmation, message=FALSE, warning=FALSE, cache = TRUE}
+# Cluster 3: Interstitial Fibroblast
+FeaturePlot(gaa, c("Col1a2", "Inmt", "Dcn"))
+# Cluster 5: Mesothelial
+FeaturePlot(gaa, c("Dcn", "Msln", "Wt1"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(gaa, c("Tmem100", "Ednrb", "Pecam1"))
+# Cluster 8: Smooth Muscle
+FeaturePlot(gaa, c("Acta2", "Myh11"))
+# Cluster 9: Type 2 Pneumocytes
+FeaturePlot(gaa, c("Sftpc", "Sftpd"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(gaa, c("Mmrn1", "Lyve1"))
+# Cluster 17: Ciliated
+FeaturePlot(gaa, c("Foxj1"))
+# Cluster 18: Goblet+Club
+FeaturePlot(gaa, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 1 Pneumocytes
+FeaturePlot(gaa, c("Rtkn2"))
+# Cluster 20: B
+FeaturePlot(gaa, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(gaa, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
+
+```{r reumap, message=FALSE, warning=FALSE, cache = TRUE}
+gaa <- FindClusters(gaa, resolution = 10)
+# Overall UMAP
+DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+# Type II vs Fibroblast
+FeaturePlot(gaa, c("Sftpc", "Pdgfra"))
+# Mesothelial vs Fibroblast
+FeaturePlot(gaa, c("Pdgfra", "Msln"))
+# Mesothelial vs Endothelial
+FeaturePlot(gaa, c("Pecam1", "Msln"))
+# Fibroblast vs Pericytes
+FeaturePlot(gaa, c("Hhip", "Pdgfra"))
+# Interstitial Fibroblast vs Capillary Endothelial
+FeaturePlot(gaa, c("Hhip", "Pdgfra"))
+```
+```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
+# without 55, 66, 85, 88, 91, 96
+gaa_rm_clusters <- c(55, 66, 85, 88, 91, 96)
+gaa_withoutdoublets <- subset(x = gaa, idents = gaa_rm_clusters, invert = TRUE)
+saveRDS(gaa_withoutdoublets, file = "output.nosync/gaa_withoutdoublets.rds")
+```
+
+```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}
+gaa_withoutdoublets <- FindNeighbors(gaa_withoutdoublets, dims = 1:20)
+gaa_withoutdoublets <- FindClusters(gaa_withoutdoublets, resolution = 0.5)
+# Overall UMAP
+DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+gaa_withoutdoublets <- RenameIdents(gaa_withoutdoublets, 
+                    '3' = "Alveolar Fibroblast",
+                    '0' = "Adventitial Fibroblast",
+                    '5' = "Mesothelial",
+                    '16' = "Goblet+Club+Basal",
+                    '17' = "Type I Pneumocyte",
+                    '10' = "Type II Pneumocyte",
+                    '14' = "Type II Pneumocyte",
+                    '18' = "Immune",
+                    '19' = "Immune",
+                    '8' = "Capillary Endothelial",
+                    '13' = "Lymphatic Endothelial",
+                    '9' = "Smooth Muscle",
+                    '11' = "Pericyte",
+                    '15' = "Ciliated")
+DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+
+
