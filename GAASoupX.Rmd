@@ -37,11 +37,14 @@ gaa_withoutdoublets <- readRDS("output.nosync/gaa_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
+options(future.globals.maxSize= 8912896000000)
+col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 # Load the gaa dataset
-gaa.data <- Read10X(data.dir = "data/gaa_KO/filtered_feature_bc_matrix/")
+gaa.data <- load10X("data.nosync/GAA_KO/outs/")
+gaa.data <- autoEstCont(gaa.data)
+gaa.out <- adjustCounts(gaa.data)
 # Initialize the Seurat object with the raw (non-normalized data)
 gaa <- CreateSeuratObject(counts = gaa.data, min.cells = 1)
-gaa
 ```
 
 ```{r qc, message = FALSE, warning = FALSE}
