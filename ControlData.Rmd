@@ -38,8 +38,8 @@ control_withoutdoublets <- readRDS("output/beforeSoupX/control_withoutdoublets.r
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
-rm(list = ls(all.names = TRUE)) #will clear all objects includes hidden objects.
-gc() #free up memrory and report the memory usage.
+rm(list = ls(all.names = TRUE)) # will clear all objects includes hidden objects.
+gc() # free up memory and report the memory usage.
 control.data <- load10X("data/Control/outs/")
 control.data <- autoEstCont(control.data)
 control.out <- adjustCounts(control.data)
