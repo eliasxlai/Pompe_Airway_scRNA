@@ -274,7 +274,7 @@ FeaturePlot(control, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```
 
 ```{r reumap, message=FALSE, warning=FALSE, cache = TRUE}
-control <- FindClusters(control, resolution = 10)
+control <- FindClusters(control, resolution = 26)
 # Overall UMAP
 DimPlot(control, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 # Fibroblast vs Endothelial

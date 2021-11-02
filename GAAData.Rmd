@@ -279,7 +279,7 @@ FeaturePlot(gaa, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```
 
 ```{r reumap, message=FALSE, warning=FALSE, cache = TRUE}
-gaa <- FindClusters(gaa, resolution = 10)
+gaa <- FindClusters(gaa, resolution = 13)
 # Overall UMAP
 DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 # Endothelial vs Fibroblast
@@ -291,8 +291,6 @@ FeaturePlot(gaa, c("Pdgfra", "Msln"))
 # Mesothelial vs Endothelial
 FeaturePlot(gaa, c("Pecam1", "Msln"))
 # Fibroblast vs Pericytes
-FeaturePlot(gaa, c("Hhip", "Pdgfra"))
-# Interstitial Fibroblast vs Capillary Endothelial
 FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 ```
 ```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
