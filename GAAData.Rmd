@@ -133,7 +133,7 @@ head(Idents(gaa), 5)
 gaa <- RunUMAP(gaa, dims = 1:22)
 DimPlot(gaa, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(gaa, file = "output/beforeSoupX/gaa.rds")
+saveRDS(gaa, file = "output/gaa.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
@@ -146,16 +146,16 @@ cluster5.markers <- FindMarkers(gaa, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0
 head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output/beforeSoupX/gaamarkers.rds")
-saveRDS(gaa, file = "output/beforeSoupX/gaa.rds")
+saveRDS(gaa.markers, file = "output/gaamarkers.rds")
+saveRDS(gaa, file = "output/gaa.rds")
 ```
 
-```{r}
+```{r findallmarkers}
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
                                   logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output/beforeSoupX/gaamarkers.rds")
-saveRDS(control.markers, file = "output/beforeSoupX/controlmarkers.rds")
+saveRDS(gaa.markers, file = "output/gaamarkers.rds")
+saveRDS(control.markers, file = "output/controlmarkers.rds")
 ```
 
 

@@ -135,7 +135,7 @@ control <- RunUMAP(object = control, dims = 1:20,min.dist = 1, n.neighbors = 40,
                    spread = 5, local.connectivity = 20)
 DimPlot(control, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(control, file = "output/beforeSoupX/control.rds")
+saveRDS(control, file = "output/control.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
