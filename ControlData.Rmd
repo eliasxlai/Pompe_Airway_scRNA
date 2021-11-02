@@ -304,9 +304,10 @@ FeaturePlot(control, c("Pecam1", "Rtkn2"))
 ```
 
 ```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
-# without 94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 59, 90, 56, 58, 75, 74, 57, 93, 55, 98
-control_rm_clusters <- c(94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 
-                     59, 90, 56, 58, 75, 74, 57, 93, 55, 98)
+# without 100, 134, 94, 136, 155, 193, 184, 170, 32, 192, 57, 152, 147, 171, 168, 84, 181, 165, 128, 69, 131, 132, 30, 23, 68, 86, 122
+control_rm_clusters <- c(100, 134, 94, 136, 155, 193, 184, 170, 32, 192, 57, 
+                         152, 147, 171, 168, 84, 181, 165, 128, 69, 131, 132, 
+                         30, 23, 68, 86, 122)
 control_withoutdoublets <- subset(x = control, idents = control_rm_clusters, invert = TRUE)
 saveRDS(control_withoutdoublets, file = "output/control_withoutdoublets.rds")
 ```
