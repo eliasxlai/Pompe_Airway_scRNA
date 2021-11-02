@@ -318,19 +318,20 @@ control_withoutdoublets <- FindClusters(control_withoutdoublets, resolution = 0.
 # Overall UMAP
 DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 control_withoutdoublets <- RenameIdents(control_withoutdoublets, 
+                    '14' = "Capillary Endothelial",
                     '6' = "Capillary Endothelial",
-                    '13' = "Capillary Endothelial",
-                    '12' = "Lymphatic Endothelial",
-                    '10' = "Smooth Muscle",
-                    '11' = "Pericyte",
-                    '9' = "Type II Pneumocyte",
+                    '10' = "Lymphatic Endothelial",
+                    '11' = "Smooth Muscle",
+                    '12' = "Pericyte",
+                    '8' = "Type II Pneumocyte",
                     '15' = "Type I Pneumocyte",
-                    '14' = "Ciliated",
+                    '13' = "Ciliated",
                     '5' = "Mesothelial",
                     '3' = "Adventitial Fibroblast",
-                    '8' = "Adventitial Fibroblast",
-                    '0' = "Alveolar Fibroblast",
-                    '16' = "Goblet+Club+Basal")
+                    '7' = "Adventitial Fibroblast",
+                    '1' = "Alveolar Fibroblast",
+                    '16' = "Goblet+Club+Basal",
+                    '17' = "Immune")
 DimPlot(control_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 

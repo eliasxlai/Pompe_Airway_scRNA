@@ -307,19 +307,19 @@ gaa_withoutdoublets <- FindClusters(gaa_withoutdoublets, resolution = 0.5)
 DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 gaa_withoutdoublets <- RenameIdents(gaa_withoutdoublets, 
                     '3' = "Alveolar Fibroblast",
-                    '0' = "Adventitial Fibroblast",
+                    '2' = "Adventitial Fibroblast",
                     '5' = "Mesothelial",
-                    '16' = "Goblet+Club+Basal",
-                    '17' = "Type I Pneumocyte",
-                    '10' = "Type II Pneumocyte",
-                    '14' = "Type II Pneumocyte",
-                    '18' = "Immune",
+                    '17' = "Goblet+Club+Basal",
+                    '18' = "Type I Pneumocyte",
+                    '9' = "Type II Pneumocyte",
+                    '15' = "Type II Pneumocyte",
+                    '20' = "Immune",
                     '19' = "Immune",
-                    '8' = "Capillary Endothelial",
-                    '13' = "Lymphatic Endothelial",
-                    '9' = "Smooth Muscle",
+                    '7' = "Capillary Endothelial",
+                    '14' = "Lymphatic Endothelial",
+                    '8' = "Smooth Muscle",
                     '11' = "Pericyte",
-                    '15' = "Ciliated")
+                    '16' = "Ciliated")
 DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
