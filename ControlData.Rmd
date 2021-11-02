@@ -30,11 +30,11 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-control <- readRDS("output/beforeSoupX/control.rds")
-control.markers <- readRDS("output/beforeSoupX/controlmarkers.rds")
-control_gcsubset.markers <- readRDS("output/beforeSoupX/control_gcsubsetmarkers.rds")
-control_gcsubset <- readRDS("output/beforeSoupX/control_gcsubset.rds")
-control_withoutdoublets <- readRDS("output/beforeSoupX/control_withoutdoublets.rds")
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
+control_gcsubset <- readRDS("output/control_gcsubset.rds")
+control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -149,13 +149,13 @@ head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
 control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
                                   logfc.threshold = 0.25)
-saveRDS(control.markers, file = "output/beforeSoupX/controlmarkers.rds")
-saveRDS(control, file = "output/beforeSoupX/control.rds")
+saveRDS(control.markers, file = "output/controlmarkers.rds")
+saveRDS(control, file = "output/control.rds")
 ```
 
 ```{r use-markers, message=FALSE, warning=FALSE}
-control <- readRDS("output/beforeSoupX/control.rds")
-control.markers <- readRDS("output/beforeSoupX/controlmarkers.rds")
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
 filteredMarkers <- control.markers %>%
   group_by(cluster) %>%
   filter(p_val_adj < 0.01) %>% 
@@ -243,8 +243,8 @@ control_gcsubset <- RunUMAP(object = control_gcsubset, dims = 1:20,min.dist = 1,
                         n.neighbors = 40, spread = 5, local.connectivity = 20)
 control_gcsubset.markers <- FindAllMarkers(control_gcsubset, only.pos = TRUE, 
                                        min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(control_gcsubset.markers, file = "output/beforeSoupX/control_gcsubsetmarkers.rds")
-saveRDS(control_gcsubset, file = "output/beforeSoupX/control_gcsubset.rds")
+saveRDS(control_gcsubset.markers, file = "output/control_gcsubsetmarkers.rds")
+saveRDS(control_gcsubset, file = "output/control_gcsubset.rds")
 FeaturePlot(control_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5", "Tp63"))
 ```
 
@@ -308,7 +308,7 @@ FeaturePlot(control, c("Pecam1", "Rtkn2"))
 control_rm_clusters <- c(94, 52, 46, 92, 83, 15, 9, 77, 82, 87, 86, 
                      59, 90, 56, 58, 75, 74, 57, 93, 55, 98)
 control_withoutdoublets <- subset(x = control, idents = control_rm_clusters, invert = TRUE)
-saveRDS(control_withoutdoublets, file = "output/beforeSoupX/control_withoutdoublets.rds")
+saveRDS(control_withoutdoublets, file = "output/control_withoutdoublets.rds")
 ```
 
 ```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}

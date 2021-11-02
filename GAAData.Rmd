@@ -30,11 +30,11 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-gaa <- readRDS("output/beforeSoupX/gaa.rds")
-gaa.markers <- readRDS("output/beforeSoupX/gaamarkers.rds")
-gaa_gcsubset.markers <- readRDS("output/beforeSoupX/gaa_gcsubsetmarkers.rds")
-gaa_gcsubset <- readRDS("output/beforeSoupX/gaa_gcsubset.rds")
-gaa_withoutdoublets <- readRDS("output/beforeSoupX/gaa_withoutdoublets.rds")
+gaa <- readRDS("output/gaa.rds")
+gaa.markers <- readRDS("output/gaamarkers.rds")
+gaa_gcsubset.markers <- readRDS("output/gaa_gcsubsetmarkers.rds")
+gaa_gcsubset <- readRDS("output/gaa_gcsubset.rds")
+gaa_withoutdoublets <- readRDS("output/gaa_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
@@ -161,8 +161,8 @@ saveRDS(control.markers, file = "output/controlmarkers.rds")
 
 
 ```{r use-markers, message=FALSE, warning=FALSE}
-gaa <- readRDS("output/beforeSoupX/gaa.rds")
-gaa.markers <- readRDS("output/beforeSoupX/gaamarkers.rds")
+gaa <- readRDS("output/gaa.rds")
+gaa.markers <- readRDS("output/gaamarkers.rds")
 gaaFilteredMarkers <- gaa.markers %>%
   group_by(cluster) %>%
   filter(p_val_adj < 0.01) %>% 
@@ -247,8 +247,8 @@ gaa_gcsubset <- RunUMAP(object = gaa_gcsubset, dims = 1:20,min.dist = 1,
                         n.neighbors = 40, spread = 5, local.connectivity = 20)
 gaa_gcsubset.markers <- FindAllMarkers(gaa_gcsubset, only.pos = TRUE, 
                                        min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa_gcsubset.markers, file = "output/beforeSoupX/gaa_gcsubsetmarkers.rds")
-saveRDS(gaa_gcsubset, file = "output/beforeSoupX/gaa_gcsubset.rds")
+saveRDS(gaa_gcsubset.markers, file = "output/gaa_gcsubsetmarkers.rds")
+saveRDS(gaa_gcsubset, file = "output/gaa_gcsubset.rds")
 FeaturePlot(gaa_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
 ```
 
@@ -297,7 +297,7 @@ FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 # without 55, 66, 85, 88, 91, 96
 gaa_rm_clusters <- c(55, 66, 85, 88, 91, 96)
 gaa_withoutdoublets <- subset(x = gaa, idents = gaa_rm_clusters, invert = TRUE)
-saveRDS(gaa_withoutdoublets, file = "output/beforeSoupX/gaa_withoutdoublets.rds")
+saveRDS(gaa_withoutdoublets, file = "output/gaa_withoutdoublets.rds")
 ```
 
 ```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}
