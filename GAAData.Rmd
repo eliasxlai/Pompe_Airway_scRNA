@@ -32,9 +32,9 @@ library(RColorBrewer)
 library(scales)
 gaa <- readRDS("output/gaa.rds")
 gaa.markers <- readRDS("output/gaamarkers.rds")
-gaa_gcsubset.markers <- readRDS("output/gaa_gcsubsetmarkers.rds")
-gaa_gcsubset <- readRDS("output/gaa_gcsubset.rds")
 gaa_withoutdoublets <- readRDS("output/gaa_withoutdoublets.rds")
+# gaa_gcsubset.markers <- readRDS("output/gaa_gcsubsetmarkers.rds")
+# gaa_gcsubset <- readRDS("output/gaa_gcsubset.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}

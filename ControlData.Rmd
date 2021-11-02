@@ -32,9 +32,9 @@ library(RColorBrewer)
 library(scales)
 control <- readRDS("output/control.rds")
 control.markers <- readRDS("output/controlmarkers.rds")
-control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
-control_gcsubset <- readRDS("output/control_gcsubset.rds")
 control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
+# control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
+#control_gcsubset <- readRDS("output/control_gcsubset.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
