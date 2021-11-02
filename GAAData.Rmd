@@ -282,6 +282,8 @@ FeaturePlot(gaa, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 gaa <- FindClusters(gaa, resolution = 10)
 # Overall UMAP
 DimPlot(gaa, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+# Endothelial vs Fibroblast
+FeaturePlot(gaa, c("Pecam1", "Pdgfra"))
 # Type II vs Fibroblast
 FeaturePlot(gaa, c("Sftpc", "Pdgfra"))
 # Mesothelial vs Fibroblast
