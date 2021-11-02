@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 ```{r load-packages, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(Seurat)
+library(DropletUtils)
 library(dplyr)
 library(Matrix)
 library(cowplot)
@@ -29,19 +30,24 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-gaa <- readRDS("output.nosync/beforeSoupX/gaa.rds")
-gaa.markers <- readRDS("output.nosync/beforeSoupX/gaamarkers.rds")
-gaa_gcsubset.markers <- readRDS("output.nosync/beforeSoupX/gaa_gcsubsetmarkers.rds")
-gaa_gcsubset <- readRDS("output.nosync/beforeSoupX/gaa_gcsubset.rds")
-gaa_withoutdoublets <- readRDS("output.nosync/beforeSoupX/gaa_withoutdoublets.rds")
+gaa <- readRDS("output/beforeSoupX/gaa.rds")
+gaa.markers <- readRDS("output/beforeSoupX/gaamarkers.rds")
+gaa_gcsubset.markers <- readRDS("output/beforeSoupX/gaa_gcsubsetmarkers.rds")
+gaa_gcsubset <- readRDS("output/beforeSoupX/gaa_gcsubset.rds")
+gaa_withoutdoublets <- readRDS("output/beforeSoupX/gaa_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
-# Load the gaa dataset
-gaa.data <- Read10X(data.dir = "data.nosync/GAA_KO/outs/filtered_feature_bc_matrix/")
-# Initialize the Seurat object with the raw (non-normalized data)
+rm(list = ls(all.names = TRUE)) #will clear all objects includes hidden objects.
+gc() #free up memrory and report the memory usage.
+gaa.data <- load10X("data/GAA_KO/outs/")
+gaa.data = autoEstCont(gaa.data)
+gaa.out = adjustCounts(gaa.data)
+DropletUtils:::write10xCounts("./GAA_KDsoupx", gaa.out, overwrite = TRUE)
+gaa.data <- Read10X("./GAA_KDsoupx")
 gaa <- CreateSeuratObject(counts = gaa.data, min.cells = 1)
-gaa
+# Load the gaa dataset
+#gaa.data <- Read10X(data.dir = "data/GAA_KO/outs/filtered_feature_bc_matrix/")
 ```
 
 ```{r qc, message = FALSE, warning = FALSE}
@@ -127,7 +133,7 @@ head(Idents(gaa), 5)
 gaa <- RunUMAP(gaa, dims = 1:22)
 DimPlot(gaa, reduction = "umap")
 # Save object so that you won't have to run the computationally intensive steps above
-saveRDS(gaa, file = "output.nosync/beforeSoupX/gaa.rds")
+saveRDS(gaa, file = "output/beforeSoupX/gaa.rds")
 ```
 
 ```{r find-differentially-expressed-features, message=FALSE, warning=FALSE, eval=FALSE}
@@ -140,23 +146,23 @@ cluster5.markers <- FindMarkers(gaa, ident.1 = 5, ident.2 = c(0, 3), min.pct = 0
 head(cluster5.markers, n = 5)
 # find markers for every cluster compared to all remaining cells, report only the positive ones
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output.nosync/beforeSoupX/gaamarkers.rds")
-saveRDS(gaa, file = "output.nosync/beforeSoupX/gaa.rds")
+saveRDS(gaa.markers, file = "output/beforeSoupX/gaamarkers.rds")
+saveRDS(gaa, file = "output/beforeSoupX/gaa.rds")
 ```
 
 ```{r}
 gaa.markers <- FindAllMarkers(gaa, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
 control.markers <- FindAllMarkers(control, only.pos = TRUE, min.pct = 0.25,
                                   logfc.threshold = 0.25)
-saveRDS(gaa.markers, file = "output.nosync/beforeSoupX/gaamarkers.rds")
-saveRDS(control.markers, file = "output.nosync/beforeSoupX/controlmarkers.rds")
+saveRDS(gaa.markers, file = "output/beforeSoupX/gaamarkers.rds")
+saveRDS(control.markers, file = "output/beforeSoupX/controlmarkers.rds")
 ```
 
 
 
 ```{r use-markers, message=FALSE, warning=FALSE}
-gaa <- readRDS("output.nosync/beforeSoupX/gaa.rds")
-gaa.markers <- readRDS("output.nosync/beforeSoupX/gaamarkers.rds")
+gaa <- readRDS("output/beforeSoupX/gaa.rds")
+gaa.markers <- readRDS("output/beforeSoupX/gaamarkers.rds")
 gaaFilteredMarkers <- gaa.markers %>%
   group_by(cluster) %>%
   filter(p_val_adj < 0.01) %>% 
@@ -241,8 +247,8 @@ gaa_gcsubset <- RunUMAP(object = gaa_gcsubset, dims = 1:20,min.dist = 1,
                         n.neighbors = 40, spread = 5, local.connectivity = 20)
 gaa_gcsubset.markers <- FindAllMarkers(gaa_gcsubset, only.pos = TRUE, 
                                        min.pct = 0.25, logfc.threshold = 0.25)
-saveRDS(gaa_gcsubset.markers, file = "output.nosync/beforeSoupX/gaa_gcsubsetmarkers.rds")
-saveRDS(gaa_gcsubset, file = "output.nosync/beforeSoupX/gaa_gcsubset.rds")
+saveRDS(gaa_gcsubset.markers, file = "output/beforeSoupX/gaa_gcsubsetmarkers.rds")
+saveRDS(gaa_gcsubset, file = "output/beforeSoupX/gaa_gcsubset.rds")
 FeaturePlot(gaa_gcsubset, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
 ```
 
@@ -291,7 +297,7 @@ FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 # without 55, 66, 85, 88, 91, 96
 gaa_rm_clusters <- c(55, 66, 85, 88, 91, 96)
 gaa_withoutdoublets <- subset(x = gaa, idents = gaa_rm_clusters, invert = TRUE)
-saveRDS(gaa_withoutdoublets, file = "output.nosync/beforeSoupX/gaa_withoutdoublets.rds")
+saveRDS(gaa_withoutdoublets, file = "output/beforeSoupX/gaa_withoutdoublets.rds")
 ```
 
 ```{r reidentify, message=FALSE, warning=FALSE, cache = TRUE}
