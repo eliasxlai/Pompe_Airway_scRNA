@@ -33,13 +33,13 @@ library(scales)
 
 # gaa <- readRDS("output/gaa.rds")
 # gaa.markers <- readRDS("output/gaamarkers.rds")
-gaa_withoutdoublets <- readRDS("output/gaa_withoutdoublets.rds")
+# gaa_withoutdoublets <- readRDS("output/gaa_withoutdoublets.rds")
 # control <- readRDS("output/control.rds")
 # control.markers <- readRDS("output/controlmarkers.rds")
-control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
+# control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
 
-# gaa_merge <- readRDS("output/gaa_merge.rds")
-# gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
+gaa_merge <- readRDS("output/gaa_merge.rds")
+gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
@@ -135,9 +135,18 @@ DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend
 ```
 
 ```{r remobe_doublets, message = FALSE, warning = FALSE}
-gaa_merge <- FindClusters(gaa_merge, resolution = 5)
+gaa_merge <- FindClusters(gaa_merge, resolution = 10)
 # Overall UMAP
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+```{r subset, message=FALSE, warning=FALSE}
+# resolution 10, without 
+gaa_merge_rm_clusters <- c(107, 110, 68, 120, 118, 116)
+gaa_merge_withoutdoublets <- subset(x = gaa_merge, idents = gaa_merge_rm_clusters, invert = TRUE)
+gaa_merge_withoutdoublets <- FindClusters(gaa_merge, resolution = 20)
+# Overall UMAP
+DimPlot(gaa_merge_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
 

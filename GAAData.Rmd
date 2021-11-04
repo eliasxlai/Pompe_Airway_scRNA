@@ -293,6 +293,7 @@ FeaturePlot(gaa, c("Pecam1", "Msln"))
 # Fibroblast vs Pericytes
 FeaturePlot(gaa, c("Hhip", "Pdgfra"))
 ```
+
 ```{r subset, message=FALSE, warning=FALSE, cache = TRUE}
 # without 80, 50, 116, 101, 106, 107
 gaa_rm_clusters <- c(80, 50, 116, 101, 106, 107)
