@@ -1,0 +1,72 @@
+---
+title: "Merge"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(Seurat)
+library(DropletUtils)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+gaa <- readRDS("output/gaa.rds")
+gaa.markers <- readRDS("output/gaamarkers.rds")
+gaa_withoutdoublets <- readRDS("output/gaa_withoutdoublets.rds")
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
+```
+
+```{r}
+control$condition <- "Control"
+gaa$condition <- "GAA KO"
+
+gaa_merge <- merge(x=control,y=c(gaa))
+saveRDS(gaa_merge, file = "output/gaa_merge.rds")
+rm(gaa, gaa.markers, gaa_withoutdoublets, control, control.markers, control_withoutdoublets)
+
+gaa_merge <- NormalizeData(gaa_merge, normalization.method = "LogNormalize", scale.factor = 10000)
+gaa_merge <- FindVariableFeatures(gaa_merge, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gaa_merge)
+gaa_merge <- ScaleData(gaa_merge, features = all.genes)
+gaa_merge <- RunPCA(object = gaa_merge, verbose = FALSE)
+ElbowPlot(gaa_merge, ndims = 30)
+gaa_merge <- FindNeighbors(object = gaa_merge, dims = 1:20)
+gaa_merge <- FindClusters(object = gaa_merge, resolution = 1)
+gaa_merge <- RunUMAP(object = gaa_merge, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+DimPlot(gaa_merge, reduction = "umap", label = TRUE)
+DimPlot(gaa_merge, reduction = "umap", label = F,group.by = "condition")
+saveRDS(gaa_merge, file = "output/gaa_merge.rds")
+
+gaa_merge.markers <- FindAllMarkers(gaa_merge, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(gaa_merge.markers, file = "output/gaa_merge.markers.rds")
+```
+
+```{r save, message=FALSE, warning=FALSE}
+saveRDS(gaa_merge, file = "output/gaa_merge.rds")
+saveRDS(gaa_merge.markers, file = "output/gaa_merge.markers.rds")
+```
+

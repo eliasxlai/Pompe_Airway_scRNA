@@ -323,5 +323,3 @@ gaa_withoutdoublets <- RenameIdents(gaa_withoutdoublets,
 DimPlot(gaa_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
-
-
