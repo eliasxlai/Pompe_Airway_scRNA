@@ -134,6 +134,13 @@ gaa_merge <- RenameIdents(gaa_merge,
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
+```{r remobe_doublets, message = FALSE, warning = FALSE}
+gaa_merge <- FindClusters(gaa_merge, resolution = 26)
+# Overall UMAP
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
+
+
 
 
 
