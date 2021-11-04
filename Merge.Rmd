@@ -42,7 +42,7 @@ gaa_merge <- readRDS("output/gaa_merge.rds")
 gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
 ```
 
-```{r}
+```{r setup, message = FALSE, warning = FALSE}
 control$condition <- "Control"
 gaa$condition <- "GAA KO"
 
@@ -69,13 +69,62 @@ gaa_merge.markers <- FindAllMarkers(gaa_merge, only.pos = TRUE, min.pct = 0.25,
 saveRDS(gaa_merge.markers, file = "output/gaa_merge.markers.rds")
 ```
 
-```{r}
+```{r featureplots, message = FALSE, warning = FALSE}
+# Cluster 3: Alveolar Fibroblast
+FeaturePlot(gaa_merge, c("Ces1d", "Pdgfra"))
+# Cluster #: Adventitial Fibroblast
+FeaturePlot(gaa_merge, c("Pi16", "Pdgfra"))
+# Cluster #: Pericyte
+FeaturePlot(gaa_merge, c("Hhip", "Pdgfra"))
+# Cluster 5: Mesothelial
+FeaturePlot(gaa_merge, c("Dcn", "Msln", "Wt1"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(gaa_merge, c("Tmem100", "Ednrb", "Pecam1"))
+# Cluster 8: Smooth Muscle
+FeaturePlot(gaa_merge, c("Acta2", "Myh11"))
+# Cluster 9: Type 2 Pneumocytes
+FeaturePlot(gaa_merge, c("Sftpc", "Sftpd"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(gaa_merge, c("Mmrn1", "Lyve1", "Pecam1"))
+# Cluster 17: Ciliated
+FeaturePlot(gaa_merge, c("Foxj1"))
+# Cluster 18: Goblet+Club
+FeaturePlot(gaa_merge, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 1 Pneumocytes
+FeaturePlot(gaa_merge, c("Rtkn2"))
+# Cluster 20: B
+FeaturePlot(gaa_merge, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(gaa_merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
 
+```{r label, message = FALSE, warning = FALSE}
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+gaa_merge <- RenameIdents(gaa_merge, 
+                    '20' = "Capillary Endothelial",
+                    '7' = "Capillary Endothelial",
+                    '19' = "Capillary Endothelial",
+                    '16' = "Lymphatic Endothelial",
+                    '12' = "Smooth Muscle",
+                    '23' = "Smooth Muscle",
+                    '14' = "Pericyte",
+                    '8' = "Type II Pneumocyte",
+                    '27' = "Type II Pneumocyte",
+                    '25' = "Type II Pneumocyte",
+                    '22' = "Type I Pneumocyte",
+                    '15' = "Ciliated",
+                    '26' = "Mesothelial",
+                    '6' = "Mesothelial",
+                    '17' = "Mesothelial",
+                    '28' = "Adventitial Fibroblast",
+                    '4' = "Adventitial Fibroblast",
+                    '1' = "Alveolar Fibroblast",
+                    '21' = "Goblet+Club+Basal",
+                    '24' = "Immune")
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
 
-```{r save, message=FALSE, warning=FALSE}
-saveRDS(gaa_merge, file = "output/gaa_merge.rds")
-saveRDS(gaa_merge.markers, file = "output/gaa_merge.markers.rds")
-```
+
+
 
