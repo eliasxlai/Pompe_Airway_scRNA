@@ -299,43 +299,43 @@ saveRDS(immune, file = "output/immune")
 # endothelial
 Idents(endothelial) <- endothelial$condition
 endothelial.markers <- FindMarkers(endothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(endothelial.markers, file = "output/endothelial.markers")
+saveRDS(endothelial.markers, file = "output/endothelial.markers.rds")
 # smoothmuscle
 Idents(smoothmuscle) <- smoothmuscle$condition
 smoothmuscle.markers <- FindMarkers(smoothmuscle,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(smoothmuscle.markers, file = "output/smoothmuscle.markers")
+saveRDS(smoothmuscle.markers, file = "output/smoothmuscle.markers.rds")
 # pericyte
 Idents(pericyte) <- pericyte$condition
 pericyte.markers <- FindMarkers(pericyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(pericyte.markers, file = "output/pericyte.markers")
+saveRDS(pericyte.markers, file = "output/pericyte.markers.rds")
 # type2pneumocyte
 Idents(type2pneumocyte) <- type2pneumocyte$condition
 type2pneumocyte.markers <- FindMarkers(type2pneumocyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(type2pneumocyte.markers, file = "output/type2pneumocyte.markers")
+saveRDS(type2pneumocyte.markers, file = "output/type2pneumocyte.markers.rds")
 # type1pneumocyte
 Idents(type1pneumocyte) <- type1pneumocyte$condition
 type1pneumocyte.markers <- FindMarkers(type1pneumocyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(type1pneumocyte.markers, file = "output/type1pneumocyte.markers")
+saveRDS(type1pneumocyte.markers, file = "output/type1pneumocyte.markers.rds")
 # ciliated
 Idents(ciliated) <- ciliated$condition
 ciliated.markers <- FindMarkers(ciliated,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(ciliated.markers, file = "output/ciliated.markers")
+saveRDS(ciliated.markers, file = "output/ciliated.markers.rds")
 # mesothelial
 Idents(mesothelial) <- mesothelial$condition
 mesothelial.markers <- FindMarkers(mesothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(mesothelial.markers, file = "output/mesothelial.markers")
+saveRDS(mesothelial.markers, file = "output/mesothelial.markers.rds")
 # fibroblast
 Idents(fibroblast) <- fibroblast$condition
 fibroblast.markers <- FindMarkers(fibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(fibroblast.markers, file = "output/fibroblast.markers")
+saveRDS(fibroblast.markers, file = "output/fibroblast.markers.rds")
 # gcb
 Idents(gcb) <- gcb$condition
 gcb.markers <- FindMarkers(gcb,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(gcb.markers, file = "output/gcb.markers")
+saveRDS(gcb.markers, file = "output/gcb.markers.rds")
 # immune
 Idents(immune) <- immune$condition
 immune.markers <- FindMarkers(immune,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(immune.markers, file = "output/immune.markers")
+saveRDS(immune.markers, file = "output/immune.markers.rds")
 ```
 
 ```{r resave-all-subsets, message=FALSE, warning=FALSE}
@@ -356,7 +356,7 @@ EnhancedVolcano(endothelial.markers,
                 title = "Control vs GAA KD, Endothelial",
                 #  selectLab = m$V1,
                 lab = rownames(endothelial.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -369,7 +369,7 @@ EnhancedVolcano(endothelial.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -381,7 +381,7 @@ EnhancedVolcano(smoothmuscle.markers,
                 title = "Control vs GAA KD, Smooth Muscle",
                 #  selectLab = m$V1,
                 lab = rownames(smoothmuscle.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -394,7 +394,7 @@ EnhancedVolcano(smoothmuscle.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -406,7 +406,7 @@ EnhancedVolcano(pericyte.markers,
                 title = "Control vs GAA KD, Pericyte",
                 #  selectLab = m$V1,
                 lab = rownames(pericyte.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -419,7 +419,7 @@ EnhancedVolcano(pericyte.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -431,7 +431,7 @@ EnhancedVolcano(type2pneumocyte.markers,
                 title = "Control vs GAA KD, Type 2 Pneumocyte",
                 #  selectLab = m$V1,
                 lab = rownames(type2pneumocyte.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -444,7 +444,7 @@ EnhancedVolcano(type2pneumocyte.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -456,7 +456,7 @@ EnhancedVolcano(type1pneumocyte.markers,
                 title = "Control vs GAA KD, Type 1 Pneumocyte",
                 #  selectLab = m$V1,
                 lab = rownames(type1pneumocyte.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -469,7 +469,7 @@ EnhancedVolcano(type1pneumocyte.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -481,7 +481,7 @@ EnhancedVolcano(ciliated.markers,
                 title = "Control vs GAA KD, Ciliated",
                 #  selectLab = m$V1,
                 lab = rownames(ciliated.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -494,7 +494,7 @@ EnhancedVolcano(ciliated.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -506,7 +506,7 @@ EnhancedVolcano(mesothelial.markers,
                 title = "Control vs GAA KD, Mesothelial",
                 #  selectLab = m$V1,
                 lab = rownames(mesothelial.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -519,7 +519,7 @@ EnhancedVolcano(mesothelial.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -531,7 +531,7 @@ EnhancedVolcano(fibroblast.markers,
                 title = "Control vs GAA KD, Fibroblast",
                 #  selectLab = m$V1,
                 lab = rownames(fibroblast.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -544,7 +544,7 @@ EnhancedVolcano(fibroblast.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -556,7 +556,7 @@ EnhancedVolcano(gcb.markers,
                 title = "Control vs GAA KD, Goblet+Club+Basal",
                 #  selectLab = m$V1,
                 lab = rownames(gcb.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -569,7 +569,7 @@ EnhancedVolcano(gcb.markers,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
@@ -577,11 +577,11 @@ EnhancedVolcano(gcb.markers,
                 drawConnectors = F,widthConnectors = 0.75
 )+NoLegend()
 
-EnhancedVolcano(immune,
+EnhancedVolcano(immune.markers,
                 title = "Control vs GAA KD, Immune",
                 #  selectLab = m$V1,
                 lab = rownames(immune.markers),
-                x = 'avg_logFC',
+                x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
                 #xlim = c(-1,1),
@@ -594,7 +594,7 @@ EnhancedVolcano(immune,
                 labFace = 'bold',
                 boxedLabels = F,
                 colAlpha = 4/5,
-                legend=c('NS','log2 fold-change','P value',
+                legendLabels=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
                 legendPosition = 'left',
                 legendLabSize = 10,
