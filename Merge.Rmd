@@ -38,8 +38,11 @@ library(scales)
 # control.markers <- readRDS("output/controlmarkers.rds")
 # control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
 
-gaa_merge <- readRDS("output/gaa_merge.rds")
-gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
+# gaa_merge <- readRDS("output/gaa_merge.rds")
+# gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
+# gaa_merge_withoutdoublets1 <- readRDS("output/gaa_merge_withoutdoublets1.rds")
+merge <- readRDS("output/merge.rds")
+merge.markers <- readRDS("output/merge.markers.rds")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
@@ -134,21 +137,154 @@ gaa_merge <- RenameIdents(gaa_merge,
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
-```{r remobe_doublets, message = FALSE, warning = FALSE}
-gaa_merge <- FindClusters(gaa_merge, resolution = 10)
+```{r, message = FALSE, warning = FALSE}
+gaa_merge <- FindClusters(gaa_merge, resolution = 1)
 # Overall UMAP
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
 ```{r subset, message=FALSE, warning=FALSE}
-# resolution 10, without 
+# resolution 10
+gaa_merge <- FindClusters(gaa_merge, resolution = 10)
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 gaa_merge_rm_clusters <- c(107, 110, 68, 120, 118, 116)
-gaa_merge_withoutdoublets <- subset(x = gaa_merge, idents = gaa_merge_rm_clusters, invert = TRUE)
-gaa_merge_withoutdoublets <- FindClusters(gaa_merge, resolution = 20)
+gaa_merge_withoutdoublets1 <- subset(x = gaa_merge, 
+                                     idents = gaa_merge_rm_clusters, invert = TRUE)
+# resolution 20
+gaa_merge_withoutdoublets1 <- FindClusters(gaa_merge_withoutdoublets1, resolution = 90)
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+gaa_merge_rm_clusters <- c(107, 110, 68, 120, 118, 116)
+gaa_merge_withoutdoublets1 <- subset(x = gaa_merge, 
+                                     idents = gaa_merge_rm_clusters, invert = TRUE)
 # Overall UMAP
-DimPlot(gaa_merge_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+DimPlot(gaa_merge_withoutdoublets1, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
+```{r remove_doublets, message=FALSE, warning=FALSE}
+# resolution 90
+gaa_merge <- FindClusters(gaa_merge, resolution = 90)
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001)
+gaa_merge_rm_clusters <- c(352, 585, 24, 184, 356, 132, 179, 301, 456, 598, 486, 320, 433, 396)
+gaa_merge_withoutdoublets <- subset(x = gaa_merge, 
+                                     idents = gaa_merge_rm_clusters, invert = TRUE)
+DimPlot(gaa_merge_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+saveRDS(gaa_merge_withoutdoublets, file = "output/gaa_merge_withoutdoublets.rds")
+```
+
+
+```{r redo, message=FALSE, warning=FALSE}
+rm(gaa_merge)
+merge <- gaa_merge_withoutdoublets
+merge <- NormalizeData(merge, normalization.method = "LogNormalize", scale.factor = 10000)
+merge <- FindVariableFeatures(merge, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(merge)
+merge <- ScaleData(merge, features = all.genes)
+merge <- RunPCA(object = merge, verbose = FALSE)
+ElbowPlot(merge, ndims = 30)
+merge <- FindNeighbors(object = merge, dims = 1:20)
+merge <- FindClusters(object = merge, resolution = 1)
+merge <- RunUMAP(object = merge, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+DimPlot(merge, reduction = "umap", label = TRUE)
+DimPlot(merge, reduction = "umap", label = F,group.by = "condition")
+saveRDS(merge, file = "output/merge.rds")
+
+merge.markers <- FindAllMarkers(merge, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(merge.markers, file = "output/merge.markers.rds")
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001)
+```
+
+```{r featureplots-merge, message = FALSE, warning = FALSE}
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+# Cluster 3: Alveolar Fibroblast
+FeaturePlot(merge, c("Ces1d", "Pdgfra"))
+# Cluster #: Adventitial Fibroblast
+FeaturePlot(merge, c("Pi16", "Pdgfra"))
+# Cluster #: Pericyte
+FeaturePlot(merge, c("Hhip", "Pdgfra"))
+# Cluster 5: Mesothelial
+FeaturePlot(merge, c("Dcn", "Msln", "Wt1"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(merge, c("Tmem100", "Ednrb", "Pecam1"))
+# Cluster 8: Smooth Muscle
+FeaturePlot(merge, c("Acta2", "Myh11"))
+# Cluster 9: Type 2 Pneumocytes
+FeaturePlot(merge, c("Sftpc", "Sftpd"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(merge, c("Mmrn1", "Lyve1", "Pecam1"))
+# Cluster 17: Ciliated
+FeaturePlot(merge, c("Foxj1"))
+# Cluster 18: Goblet+Club+Basal
+FeaturePlot(merge, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 1 Pneumocytes
+FeaturePlot(merge, c("Rtkn2"))
+# Cluster 20: B
+FeaturePlot(merge, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
+
+```{r relabeling, message=FALSE, warning=FALSE}
+merge <- FindClusters(object = merge, resolution = 1)
+merge <- RenameIdents(merge, 
+                    '5' = "Endothelial",
+                    '0' = "Endothelial",
+                    '15' = "Endothelial",
+                    '11' = "Endothelial",
+                    '24' = "Endothelial",
+                    '19' = "Endothelial",
+                    '7' = "Endothelial",
+                    '13' = "Endothelial",
+                    '17' = "SmoothMuscle",
+                    '12' = "Pericyte",
+                    '9' = "Type2Pneumocyte",
+                    '23' = "Type2Pneumocyte",
+                    '27' = "Type1Pneumocyte",
+                    '25' = "Type1Pneumocyte",
+                    '14' = "Ciliated",
+                    '18' = "Mesothelial",
+                    '6' = "Mesothelial",
+                    '21' = "Fibroblast",
+                    '3' = "Fibroblast",
+                    '2' = "Fibroblast",
+                    '10' = "Fibroblast",
+                    '4' = "Fibroblast",
+                    '1' = "Fibroblast",
+                    '8' = "Fibroblast",
+                    '20' = "Goblet+Club+Basal",
+                    '22' = "Immune")
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+saveRDS(merge, file = "output/merge.rds")
+```
+
+```{r finalsubsets, message=FALSE, warning=FALSE}
+endothelial <- subset(x = merge, idents = "Endothelial")
+saveRDS(endothelial, file = "output/endothelial.rds")
+smoothmuscle <- subset(x = merge, idents = "SmoothMuscle")
+saveRDS(smoothmuscle, file = "output/smoothmuscle.rds")
+pericyte <- subset(x = merge, idents = "Pericyte")
+saveRDS(pericyte, file = "output/pericyte.rds")
+type2pneumocyte <- subset(x = merge, idents = "Type2Pneumocyte")
+saveRDS(type2pneumocyte, file = "output/type2pneumocyte.rds")
+type1pneumocyte <- subset(x = merge, idents = "Type1Pneumocyte")
+saveRDS(type1pneumocyte, file = "output/type1pneumocyte.rds")
+ciliated <- subset(x = merge, idents = "Ciliated")
+saveRDS(ciliated, file = "output/ciliated.rds")
+mesothelial <- subset(x = merge, idents = "Mesothelial")
+saveRDS(mesothelial, file = "output/mesothelial.rds")
+fibroblast <- subset(x = merge, idents = "Fibroblast")
+saveRDS(fibroblast, file = "output/fibroblast.rds")
+gcb <- subset(x = merge, idents = "Goblet+Club+Basal")
+saveRDS(gcb, file = "output/gcb.rds")
+immune <- subset(x = merge, idents = "Immune")
+saveRDS(immune, file = "output/immune")
+```
+
+```{r}
+testsmoothmuscle <- subset(x = merge, 
+                                     idents = 16, invert = TRUE)
+```
 
 
 
