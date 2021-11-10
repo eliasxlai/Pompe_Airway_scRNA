@@ -331,8 +331,6 @@ saveRDS(gcb, file = "output/gcb")
 saveRDS(immune, file = "output/immune")
 ```
 
-
-
 ```{r volcanoplots, message=FALSE, warning=FALSE}
 EnhancedVolcano(endothelial.markers,
                 title = "Control vs GAA KD, Endothelial",
@@ -349,7 +347,7 @@ EnhancedVolcano(endothelial.markers,
                 labSize = 3.0,
                 labCol = 'black',
                 labFace = 'bold',
-                boxedLabels = F,
+                boxedLabels = FALSE,
                 colAlpha = 4/5,
                 legend=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
