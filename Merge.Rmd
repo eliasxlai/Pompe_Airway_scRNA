@@ -37,12 +37,32 @@ library(scales)
 # control <- readRDS("output/control.rds")
 # control.markers <- readRDS("output/controlmarkers.rds")
 # control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
-
 # gaa_merge <- readRDS("output/gaa_merge.rds")
 # gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
 # gaa_merge_withoutdoublets1 <- readRDS("output/gaa_merge_withoutdoublets1.rds")
+
 merge <- readRDS("output/merge.rds")
 merge.markers <- readRDS("output/merge.markers.rds")
+endothelial <- readRDS("output/endothelial.rds")
+endothelial.markers <- readRDS("output/endothelial.markers.rds")
+smoothmuscle <- readRDS("output/smoothmuscle.rds")
+smoothmuscle.markers <- readRDS("output/smoothmuscle.markers.rds")
+pericyte <- readRDS("output/pericyte.rds")
+pericyte.markers <- readRDS("output/pericyte.markers.rds")
+type2pneumocyte <- readRDS("output/type2pneumocyte.rds")
+type2pneumocyte.markers <- readRDS("output/type2pneumocyte.markers.rds")
+type1pneumocyte <- readRDS("output/type1pneumocyte.rds")
+type1pneumocyte.markers <- readRDS("output/type1pneumocyte.markers.rds")
+ciliated <- readRDS("output/ciliated.rds")
+ciliated.markers <- readRDS("output/ciliated.markers.rds")
+mesothelial <- readRDS("output/mesothelial.rds")
+mesothelial.markers <- readRDS("output/mesothelial.markers.rds")
+fibroblast <- readRDS("output/fibroblast.rds")
+fibroblast.markers <- readRDS("output/fibroblast.markers.rds")
+gcb <- readRDS("output/gcb.rds")
+gcb.markers <- readRDS("output/gcb.markers.rds")
+immune <- readRDS("output/immune.rds")
+immune.markers <- readRDS("output/immune.markers.rds")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
@@ -347,7 +367,7 @@ EnhancedVolcano(endothelial.markers,
                 labSize = 3.0,
                 labCol = 'black',
                 labFace = 'bold',
-                boxedLabels = FALSE,
+                boxedLabels = F,
                 colAlpha = 4/5,
                 legend=c('NS','log2 fold-change','P value',
                          'P value & log2 fold-change'),
