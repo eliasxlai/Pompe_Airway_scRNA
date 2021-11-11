@@ -352,6 +352,7 @@ saveRDS(immune, file = "output/immune")
 ```
 
 ```{r volcanoplots, message=FALSE, warning=FALSE}
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 EnhancedVolcano(endothelial.markers,
                 title = "Control vs GAA KD, Endothelial",
                 #  selectLab = m$V1,
