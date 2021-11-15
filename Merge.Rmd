@@ -604,7 +604,34 @@ EnhancedVolcano(immune.markers,
 )+NoLegend()
 ```
 
+```{r furthercleaning, message=FALSE, warning=FALSE}
+merge <- FindClusters(merge, resolution = 10)
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+merge_rm_clusters <- c(83, 100, 91, 75, 85, 106, 70, 69, 98, 95)
+merge1 <- subset(x = merge, idents = merge_rm_clusters, invert = TRUE)
+DimPlot(merge1, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+```
 
+```{r renormalize, message=FALSE, warning=FALSE}
+merge1 <- NormalizeData(merge1, normalization.method = "LogNormalize", scale.factor = 10000)
+merge1 <- FindVariableFeatures(merge1, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(merge1)
+merge1 <- ScaleData(merge1, features = all.genes)
+merge1 <- RunPCA(object = merge1, verbose = FALSE)
+ElbowPlot(merge1, ndims = 30)
+merge1 <- FindNeighbors(object = merge1, dims = 1:20)
+merge1 <- FindClusters(object = merge1, resolution = 1)
+merge1 <- RunUMAP(object = merge1, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+DimPlot(merge1, reduction = "umap", label = TRUE)
+DimPlot(merge1, reduction = "umap", label = F,group.by = "condition")
+saveRDS(merge1, file = "output/merge1.rds")
+
+merge1.markers <- FindAllMarkers(merge1, only.pos = TRUE, min.pct = 0.25,
+                                  logfc.threshold = 0.25)
+saveRDS(merge1.markers, file = "output/merge1.markers.rds")
+DimPlot(merge1, reduction = "umap", label = TRUE, pt.size = 0.001)
+```
 
 
 
