@@ -41,6 +41,8 @@ library(scales)
 # gaa_merge.markers <- readRDS("output/gaa_merge.markers.rds")
 # gaa_merge_withoutdoublets1 <- readRDS("output/gaa_merge_withoutdoublets1.rds")
 
+# merge1 <- readRDS("output/merge1.rds")
+# merge1.markers <- readRDS("output/merge1.markers.rds")
 merge <- readRDS("output/merge.rds")
 merge.markers <- readRDS("output/merge.markers.rds")
 endothelial <- readRDS("output/endothelial.rds")
@@ -57,12 +59,20 @@ ciliated <- readRDS("output/ciliated.rds")
 ciliated.markers <- readRDS("output/ciliated.markers.rds")
 mesothelial <- readRDS("output/mesothelial.rds")
 mesothelial.markers <- readRDS("output/mesothelial.markers.rds")
-fibroblast <- readRDS("output/fibroblast.rds")
-fibroblast.markers <- readRDS("output/fibroblast.markers.rds")
+alveolarfibroblast <- readRDS("output/alveolarfibroblast.rds")
+alveolarfibroblast.markers <- readRDS("output/alveolarfibroblast.markers.rds")
+adventitialfibroblast <- readRDS("output/adventitialfibroblast.rds")
+adventitialfibroblast.markers <- readRDS("output/adventitialfibroblast.markers.rds")
 gcb <- readRDS("output/gcb.rds")
 gcb.markers <- readRDS("output/gcb.markers.rds")
 immune <- readRDS("output/immune.rds")
 immune.markers <- readRDS("output/immune.markers.rds")
+capillaryendothelial <- readRDS("output/capillaryendothelial.rds")
+capillaryendothelial.markers <- readRDS("output/capillaryendothelial.markers.rds")
+lymphaticendothelial <- readRDS("output/lymphaticendothelial.rds")
+lymphaticendothelial.markers <- readRDS("output/lymphaticendothelial.markers.rds")
+peribronchial <- readRDS("output/peribronchial.rds")
+peribronchial.markers <- readRDS("output/peribronchial.markers.rds")
 ```
 
 ```{r setup, message = FALSE, warning = FALSE}
@@ -175,10 +185,10 @@ DimPlot(gaa_merge_withoutdoublets1, reduction = "umap", label = TRUE, pt.size = 
 ```
 
 ```{r remove_doublets, message=FALSE, warning=FALSE}
-# resolution 90
+# resolution 90, 396
 gaa_merge <- FindClusters(gaa_merge, resolution = 90)
-DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001)
-gaa_merge_rm_clusters <- c(352, 585, 24, 184, 356, 132, 179, 301, 456, 598, 486, 320, 433, 396)
+DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+gaa_merge_rm_clusters <- c(352, 585, 24, 184, 356, 132, 179, 301, 456, 598, 486, 320, 433, 396, 479, 267, 488, 559, 347, 108, 39, 336, 553, 141, 407, 171, 306, 124, 431)
 gaa_merge_withoutdoublets <- subset(x = gaa_merge, 
                                      idents = gaa_merge_rm_clusters, invert = TRUE)
 DimPlot(gaa_merge_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
@@ -212,11 +222,13 @@ DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001)
 ```{r featureplots-merge, message = FALSE, warning = FALSE}
 DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 # Cluster 3: Alveolar Fibroblast
-FeaturePlot(merge, c("Ces1d", "Pdgfra"))
+FeaturePlot(merge, c("Ces1d", "Npnt", "Pdgfra"))
 # Cluster #: Adventitial Fibroblast
-FeaturePlot(merge, c("Pi16", "Pdgfra"))
+FeaturePlot(merge, c("Pi16", "Ccl11", "Il33", "Adh7", "Pdgfra"))
 # Cluster #: Pericyte
-FeaturePlot(merge, c("Hhip", "Pdgfra"))
+FeaturePlot(merge, c("Pdgfrb", "Cspg4", "Mcam"))
+# Cluster #: Peribronchial Fibroblast
+FeaturePlot(merge, c("Hhip", "Pdgfra", "Fgf18"))
 # Cluster 5: Mesothelial
 FeaturePlot(merge, c("Dcn", "Msln", "Wt1"))
 # Cluster 7: Capillary Endothelial
@@ -242,31 +254,30 @@ FeaturePlot(merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```{r relabeling, message=FALSE, warning=FALSE}
 merge <- FindClusters(object = merge, resolution = 1)
 merge <- RenameIdents(merge, 
-                    '5' = "Endothelial",
-                    '0' = "Endothelial",
-                    '15' = "Endothelial",
-                    '11' = "Endothelial",
-                    '24' = "Endothelial",
-                    '19' = "Endothelial",
-                    '7' = "Endothelial",
-                    '13' = "Endothelial",
-                    '17' = "SmoothMuscle",
-                    '12' = "Pericyte",
-                    '9' = "Type2Pneumocyte",
-                    '23' = "Type2Pneumocyte",
-                    '27' = "Type1Pneumocyte",
-                    '25' = "Type1Pneumocyte",
-                    '14' = "Ciliated",
-                    '18' = "Mesothelial",
-                    '6' = "Mesothelial",
-                    '21' = "Fibroblast",
-                    '3' = "Fibroblast",
-                    '2' = "Fibroblast",
-                    '10' = "Fibroblast",
-                    '4' = "Fibroblast",
-                    '1' = "Fibroblast",
-                    '8' = "Fibroblast",
-                    '20' = "Goblet+Club+Basal",
+                    '23' = "Endothelial",
+                    '12' = "Endothelial",
+                    '1' = "Endothelial",
+                    '16' = "Endothelial",
+                    '4' = "Endothelial",
+                    '15' = "LymphaticEndothelial",
+                    '7' = "CapillaryEndothelial",
+                    '18' = "CapillaryEndothelial",
+                    '14' = "SmoothMuscle",
+                    '21' = "Pericyte",
+                    '10' = "Type2Pneumocyte",
+                    '24' = "Type1Pneumocyte",
+                    '17' = "Ciliated",
+                    '5' = "Mesothelial",
+                    '20' = "Mesothelial",
+                    '3' = "AdventitialFibroblast",
+                    '11' = "AdventitialFibroblast",
+                    '9' = "AdventitialFibroblast",
+                    '6' = "AlveolarFibroblast",
+                    '2' = "AlveolarFibroblast",
+                    '26' = "AlveolarFibroblast",
+                    '0' = "AlveolarFibroblast",
+                    '19' = "Goblet+Club+Basal",
+                    '13' = "Peribronchial",
                     '22' = "Immune")
 DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 saveRDS(merge, file = "output/merge.rds")
@@ -287,12 +298,19 @@ ciliated <- subset(x = merge, idents = "Ciliated")
 saveRDS(ciliated, file = "output/ciliated.rds")
 mesothelial <- subset(x = merge, idents = "Mesothelial")
 saveRDS(mesothelial, file = "output/mesothelial.rds")
-fibroblast <- subset(x = merge, idents = "Fibroblast")
-saveRDS(fibroblast, file = "output/fibroblast.rds")
+alveolarfibroblast <- subset(x = merge, idents = "AlveolarFibroblast")
+adventitialfibroblast <- subset(x = merge, idents = "AdventitialFibroblast")
 gcb <- subset(x = merge, idents = "Goblet+Club+Basal")
 saveRDS(gcb, file = "output/gcb.rds")
 immune <- subset(x = merge, idents = "Immune")
 saveRDS(immune, file = "output/immune")
+
+capillaryendothelial <- subset(x = merge, idents = "CapillaryEndothelial")
+saveRDS(capillaryendothelial, file = "output/capillaryendothelial")
+lymphaticendothelial <- subset(x = merge, idents = "LymphaticEndothelial")
+saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial")
+peribronchial <- subset(x = merge, idents = "Peribronchial")
+saveRDS(peribronchial, file = "output/peribronchial")
 ```
 
 ```{r idents+markers, message=FALSE, warning=FALSE}
@@ -324,10 +342,14 @@ saveRDS(ciliated.markers, file = "output/ciliated.markers.rds")
 Idents(mesothelial) <- mesothelial$condition
 mesothelial.markers <- FindMarkers(mesothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(mesothelial.markers, file = "output/mesothelial.markers.rds")
-# fibroblast
-Idents(fibroblast) <- fibroblast$condition
-fibroblast.markers <- FindMarkers(fibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
-saveRDS(fibroblast.markers, file = "output/fibroblast.markers.rds")
+# adventitialfibroblast
+Idents(adventitialfibroblast) <- adventitialfibroblast$condition
+adventitialfibroblast.markers <- FindMarkers(adventitialfibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(adventitialfibroblast.markers, file = "output/adventitialfibroblast.markers.rds")
+# alveolarfibroblast
+Idents(alveolarfibroblast) <- alveolarfibroblast$condition
+alveolarfibroblast.markers <- FindMarkers(alveolarfibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(alveolarfibroblast.markers, file = "output/alveolarfibroblast.markers.rds")
 # gcb
 Idents(gcb) <- gcb$condition
 gcb.markers <- FindMarkers(gcb,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
@@ -336,6 +358,19 @@ saveRDS(gcb.markers, file = "output/gcb.markers.rds")
 Idents(immune) <- immune$condition
 immune.markers <- FindMarkers(immune,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(immune.markers, file = "output/immune.markers.rds")
+
+# capillaryendothelial
+Idents(capillaryendothelial) <- capillaryendothelial$condition
+capillaryendothelial.markers <- FindMarkers(capillaryendothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(capillaryendothelial.markers, file = "output/capillaryendothelial.markers.rds")
+# peribronchial
+Idents(peribronchial) <- peribronchial$condition
+peribronchial.markers <- FindMarkers(peribronchial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(peribronchial.markers, file = "output/peribronchial.markers.rds")
+# lymphaticendothelial
+Idents(lymphaticendothelial) <- lymphaticendothelial$condition
+lymphaticendothelial.markers <- FindMarkers(lymphaticendothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(lymphaticendothelial.markers, file = "output/lymphaticendothelial.markers.rds")
 ```
 
 ```{r resave-all-subsets, message=FALSE, warning=FALSE}
@@ -346,9 +381,14 @@ saveRDS(type2pneumocyte, file = "output/type2pneumocyte")
 saveRDS(type1pneumocyte, file = "output/type1pneumocyte")
 saveRDS(ciliated, file = "output/ciliated")
 saveRDS(mesothelial, file = "output/mesothelial")
-saveRDS(fibroblast, file = "output/fibroblast")
+saveRDS(fibroblast, file = "output/adventitialfibroblast")
+saveRDS(fibroblast, file = "output/alveolarfibroblast")
 saveRDS(gcb, file = "output/gcb")
 saveRDS(immune, file = "output/immune")
+
+saveRDS(capillaryendothelial, file = "output/capillaryendothelial")
+saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial")
+saveRDS(peribronchial, file = "output/peribronchial")
 ```
 
 ```{r volcanoplots, message=FALSE, warning=FALSE}
@@ -528,10 +568,35 @@ EnhancedVolcano(mesothelial.markers,
                 drawConnectors = F,widthConnectors = 0.75
 )+NoLegend()
 
-EnhancedVolcano(fibroblast.markers,
-                title = "Control vs GAA KD, Fibroblast",
+EnhancedVolcano(adventitialfibroblast.markers,
+                title = "Control vs GAA KD, Adventitial Fibroblast",
                 #  selectLab = m$V1,
-                lab = rownames(fibroblast.markers),
+                lab = rownames(adventitialfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 2.0,
+                labSize = 3.0,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75
+)+NoLegend()
+
+EnhancedVolcano(alveolarfibroblast.markers,
+                title = "Control vs GAA KD, Alveolar Fibroblast",
+                #  selectLab = m$V1,
+                lab = rownames(alveolarfibroblast.markers),
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
@@ -602,6 +667,81 @@ EnhancedVolcano(immune.markers,
                 legendIconSize = 4.0,
                 drawConnectors = F,widthConnectors = 0.75
 )+NoLegend()
+
+EnhancedVolcano(capillaryendothelial.markers,
+                title = "Control vs GAA KD, Capillary Endothelial",
+                #  selectLab = m$V1,
+                lab = rownames(capillaryendothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 2.0,
+                labSize = 3.0,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75
+)+NoLegend()
+
+EnhancedVolcano(lymphaticendothelial.markers,
+                title = "Control vs GAA KD, Lymphatic Endothelial",
+                #  selectLab = m$V1,
+                lab = rownames(lymphaticendothelial.markers.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 2.0,
+                labSize = 3.0,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75
+)+NoLegend()
+
+EnhancedVolcano(peribronchial.markers,
+                title = "Control vs GAA KD, Peribronchial",
+                #  selectLab = m$V1,
+                lab = rownames(peribronchial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 2.0,
+                labSize = 3.0,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75
+)+NoLegend()
 ```
 
 ```{r furthercleaning, message=FALSE, warning=FALSE}
@@ -633,5 +773,8 @@ saveRDS(merge1.markers, file = "output/merge1.markers.rds")
 DimPlot(merge1, reduction = "umap", label = TRUE, pt.size = 0.001)
 ```
 
+```{r}
+
+```
 
 
