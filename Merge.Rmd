@@ -381,8 +381,8 @@ saveRDS(type2pneumocyte, file = "output/type2pneumocyte")
 saveRDS(type1pneumocyte, file = "output/type1pneumocyte")
 saveRDS(ciliated, file = "output/ciliated")
 saveRDS(mesothelial, file = "output/mesothelial")
-saveRDS(fibroblast, file = "output/adventitialfibroblast")
-saveRDS(fibroblast, file = "output/alveolarfibroblast")
+saveRDS(adventitialfibroblast, file = "output/adventitialfibroblast")
+saveRDS(alveolarfibroblast, file = "output/alveolarfibroblast")
 saveRDS(gcb, file = "output/gcb")
 saveRDS(immune, file = "output/immune")
 
@@ -696,7 +696,7 @@ EnhancedVolcano(capillaryendothelial.markers,
 EnhancedVolcano(lymphaticendothelial.markers,
                 title = "Control vs GAA KD, Lymphatic Endothelial",
                 #  selectLab = m$V1,
-                lab = rownames(lymphaticendothelial.markers.markers),
+                lab = rownames(lymphaticendothelial.markers),
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
