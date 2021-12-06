@@ -30,6 +30,8 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
+options(future.globals.maxSize= 8912896000000)
+col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 
 # gaa <- readRDS("output/gaa.rds")
 # gaa.markers <- readRDS("output/gaamarkers.rds")
@@ -188,7 +190,7 @@ DimPlot(gaa_merge_withoutdoublets1, reduction = "umap", label = TRUE, pt.size = 
 # resolution 90, 396
 gaa_merge <- FindClusters(gaa_merge, resolution = 90)
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
-gaa_merge_rm_clusters <- c(352, 585, 24, 184, 356, 132, 179, 301, 456, 598, 486, 320, 433, 396, 479, 267, 488, 559, 347, 108, 39, 336, 553, 141, 407, 171, 306, 124, 431)
+gaa_merge_rm_clusters <- c(352, 585, 24, 184, 356, 132, 179, 301, 456, 598, 486, 320, 433, 396, 479, 267, 488, 559, 347, 108, 39, 336, 553, 141, 407, 171, 306, 124, 431, 259)
 gaa_merge_withoutdoublets <- subset(x = gaa_merge, 
                                      idents = gaa_merge_rm_clusters, invert = TRUE)
 DimPlot(gaa_merge_withoutdoublets, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
@@ -197,7 +199,7 @@ saveRDS(gaa_merge_withoutdoublets, file = "output/gaa_merge_withoutdoublets.rds"
 
 
 ```{r redo, message=FALSE, warning=FALSE}
-rm(gaa_merge)
+rm(gaa_merge, gaa_merge.markers, gaa_merge_rm_clusters)
 merge <- gaa_merge_withoutdoublets
 merge <- NormalizeData(merge, normalization.method = "LogNormalize", scale.factor = 10000)
 merge <- FindVariableFeatures(merge, selection.method = "vst", nfeatures = 2000)
@@ -254,31 +256,29 @@ FeaturePlot(merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```{r relabeling, message=FALSE, warning=FALSE}
 merge <- FindClusters(object = merge, resolution = 1)
 merge <- RenameIdents(merge, 
-                    '23' = "Endothelial",
+                    '3' = "Endothelial",
                     '12' = "Endothelial",
-                    '1' = "Endothelial",
-                    '16' = "Endothelial",
-                    '4' = "Endothelial",
                     '15' = "LymphaticEndothelial",
-                    '7' = "CapillaryEndothelial",
-                    '18' = "CapillaryEndothelial",
-                    '14' = "SmoothMuscle",
-                    '21' = "Pericyte",
+                    '8' = "CapillaryEndothelial",
+                    '19' = "CapillaryEndothelial",
+                    '26' = "CapillaryEndothelial",
+                    '16' = "SmoothMuscle",
+                    '22' = "Pericyte",
                     '10' = "Type2Pneumocyte",
                     '24' = "Type1Pneumocyte",
                     '17' = "Ciliated",
                     '5' = "Mesothelial",
-                    '20' = "Mesothelial",
-                    '3' = "AdventitialFibroblast",
+                    '21' = "Mesothelial",
                     '11' = "AdventitialFibroblast",
                     '9' = "AdventitialFibroblast",
+                    '4' = "AdventitialFibroblast",
+                    '20' = "AlveolarFibroblast",
                     '6' = "AlveolarFibroblast",
                     '2' = "AlveolarFibroblast",
-                    '26' = "AlveolarFibroblast",
-                    '0' = "AlveolarFibroblast",
-                    '19' = "Goblet+Club+Basal",
+                    '1' = "AlveolarFibroblast",
+                    '18' = "Goblet+Club+Basal",
                     '13' = "Peribronchial",
-                    '22' = "Immune")
+                    '23' = "Immune")
 DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 saveRDS(merge, file = "output/merge.rds")
 ```
@@ -303,73 +303,73 @@ adventitialfibroblast <- subset(x = merge, idents = "AdventitialFibroblast")
 gcb <- subset(x = merge, idents = "Goblet+Club+Basal")
 saveRDS(gcb, file = "output/gcb.rds")
 immune <- subset(x = merge, idents = "Immune")
-saveRDS(immune, file = "output/immune")
+saveRDS(immune, file = "output/immune.rds")
 
 capillaryendothelial <- subset(x = merge, idents = "CapillaryEndothelial")
-saveRDS(capillaryendothelial, file = "output/capillaryendothelial")
+saveRDS(capillaryendothelial, file = "output/capillaryendothelial.rds")
 lymphaticendothelial <- subset(x = merge, idents = "LymphaticEndothelial")
-saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial")
+saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial.rds")
 peribronchial <- subset(x = merge, idents = "Peribronchial")
-saveRDS(peribronchial, file = "output/peribronchial")
+saveRDS(peribronchial, file = "output/peribronchial.rds")
 ```
 
 ```{r idents+markers, message=FALSE, warning=FALSE}
 # endothelial
 Idents(endothelial) <- endothelial$condition
-endothelial.markers <- FindMarkers(endothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+endothelial.markers <- FindMarkers(endothelial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(endothelial.markers, file = "output/endothelial.markers.rds")
 # smoothmuscle
 Idents(smoothmuscle) <- smoothmuscle$condition
-smoothmuscle.markers <- FindMarkers(smoothmuscle,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+smoothmuscle.markers <- FindMarkers(smoothmuscle,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(smoothmuscle.markers, file = "output/smoothmuscle.markers.rds")
 # pericyte
 Idents(pericyte) <- pericyte$condition
-pericyte.markers <- FindMarkers(pericyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+pericyte.markers <- FindMarkers(pericyte,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(pericyte.markers, file = "output/pericyte.markers.rds")
 # type2pneumocyte
 Idents(type2pneumocyte) <- type2pneumocyte$condition
-type2pneumocyte.markers <- FindMarkers(type2pneumocyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+type2pneumocyte.markers <- FindMarkers(type2pneumocyte,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(type2pneumocyte.markers, file = "output/type2pneumocyte.markers.rds")
 # type1pneumocyte
 Idents(type1pneumocyte) <- type1pneumocyte$condition
-type1pneumocyte.markers <- FindMarkers(type1pneumocyte,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+type1pneumocyte.markers <- FindMarkers(type1pneumocyte,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(type1pneumocyte.markers, file = "output/type1pneumocyte.markers.rds")
 # ciliated
 Idents(ciliated) <- ciliated$condition
-ciliated.markers <- FindMarkers(ciliated,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+ciliated.markers <- FindMarkers(ciliated,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(ciliated.markers, file = "output/ciliated.markers.rds")
 # mesothelial
 Idents(mesothelial) <- mesothelial$condition
-mesothelial.markers <- FindMarkers(mesothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+mesothelial.markers <- FindMarkers(mesothelial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(mesothelial.markers, file = "output/mesothelial.markers.rds")
 # adventitialfibroblast
 Idents(adventitialfibroblast) <- adventitialfibroblast$condition
-adventitialfibroblast.markers <- FindMarkers(adventitialfibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+adventitialfibroblast.markers <- FindMarkers(adventitialfibroblast,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(adventitialfibroblast.markers, file = "output/adventitialfibroblast.markers.rds")
 # alveolarfibroblast
 Idents(alveolarfibroblast) <- alveolarfibroblast$condition
-alveolarfibroblast.markers <- FindMarkers(alveolarfibroblast,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+alveolarfibroblast.markers <- FindMarkers(alveolarfibroblast,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(alveolarfibroblast.markers, file = "output/alveolarfibroblast.markers.rds")
 # gcb
 Idents(gcb) <- gcb$condition
-gcb.markers <- FindMarkers(gcb,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+gcb.markers <- FindMarkers(gcb,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(gcb.markers, file = "output/gcb.markers.rds")
 # immune
 Idents(immune) <- immune$condition
-immune.markers <- FindMarkers(immune,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+immune.markers <- FindMarkers(immune,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(immune.markers, file = "output/immune.markers.rds")
 
 # capillaryendothelial
 Idents(capillaryendothelial) <- capillaryendothelial$condition
-capillaryendothelial.markers <- FindMarkers(capillaryendothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+capillaryendothelial.markers <- FindMarkers(capillaryendothelial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(capillaryendothelial.markers, file = "output/capillaryendothelial.markers.rds")
 # peribronchial
 Idents(peribronchial) <- peribronchial$condition
-peribronchial.markers <- FindMarkers(peribronchial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+peribronchial.markers <- FindMarkers(peribronchial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(peribronchial.markers, file = "output/peribronchial.markers.rds")
 # lymphaticendothelial
 Idents(lymphaticendothelial) <- lymphaticendothelial$condition
-lymphaticendothelial.markers <- FindMarkers(lymphaticendothelial,ident.1 = "Control",ident.2 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+lymphaticendothelial.markers <- FindMarkers(lymphaticendothelial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(lymphaticendothelial.markers, file = "output/lymphaticendothelial.markers.rds")
 ```
 
@@ -404,8 +404,8 @@ EnhancedVolcano(endothelial.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -415,7 +415,7 @@ EnhancedVolcano(endothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(smoothmuscle.markers,
@@ -429,8 +429,8 @@ EnhancedVolcano(smoothmuscle.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -440,7 +440,7 @@ EnhancedVolcano(smoothmuscle.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(pericyte.markers,
@@ -454,8 +454,8 @@ EnhancedVolcano(pericyte.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -465,7 +465,7 @@ EnhancedVolcano(pericyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(type2pneumocyte.markers,
@@ -479,8 +479,8 @@ EnhancedVolcano(type2pneumocyte.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -490,7 +490,7 @@ EnhancedVolcano(type2pneumocyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(type1pneumocyte.markers,
@@ -504,8 +504,8 @@ EnhancedVolcano(type1pneumocyte.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -515,7 +515,7 @@ EnhancedVolcano(type1pneumocyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(ciliated.markers,
@@ -529,8 +529,8 @@ EnhancedVolcano(ciliated.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -540,7 +540,7 @@ EnhancedVolcano(ciliated.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(mesothelial.markers,
@@ -554,8 +554,8 @@ EnhancedVolcano(mesothelial.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -565,7 +565,7 @@ EnhancedVolcano(mesothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(adventitialfibroblast.markers,
@@ -579,8 +579,8 @@ EnhancedVolcano(adventitialfibroblast.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -590,7 +590,7 @@ EnhancedVolcano(adventitialfibroblast.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(alveolarfibroblast.markers,
@@ -604,8 +604,8 @@ EnhancedVolcano(alveolarfibroblast.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -615,7 +615,7 @@ EnhancedVolcano(alveolarfibroblast.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(gcb.markers,
@@ -629,8 +629,8 @@ EnhancedVolcano(gcb.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -640,7 +640,7 @@ EnhancedVolcano(gcb.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(immune.markers,
@@ -654,8 +654,8 @@ EnhancedVolcano(immune.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -665,7 +665,7 @@ EnhancedVolcano(immune.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(capillaryendothelial.markers,
@@ -679,8 +679,8 @@ EnhancedVolcano(capillaryendothelial.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -690,7 +690,7 @@ EnhancedVolcano(capillaryendothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(lymphaticendothelial.markers,
@@ -704,8 +704,8 @@ EnhancedVolcano(lymphaticendothelial.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -715,7 +715,7 @@ EnhancedVolcano(lymphaticendothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(peribronchial.markers,
@@ -729,8 +729,8 @@ EnhancedVolcano(peribronchial.markers,
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
-                pointSize = 2.0,
-                labSize = 3.0,
+                pointSize = 3.0,
+                labSize = 4.5,
                 labCol = 'black',
                 labFace = 'bold',
                 boxedLabels = F,
@@ -740,7 +740,7 @@ EnhancedVolcano(peribronchial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 ```
 
@@ -773,7 +773,25 @@ saveRDS(merge1.markers, file = "output/merge1.markers.rds")
 DimPlot(merge1, reduction = "umap", label = TRUE, pt.size = 0.001)
 ```
 
-```{r}
+```{r dotplot, message=FALSE, warning=FALSE}
+DotPlot(
+  object = merge,
+  assay = NULL,
+  features = rownames(merge),
+  cols = c("lightgrey", "blue"),
+  col.min = -2.5,
+  col.max = 2.5,
+  dot.min = 0,
+  dot.scale = 6,
+  idents = NULL,
+  group.by = NULL,
+  split.by = NULL,
+  cluster.idents = FALSE,
+  scale = TRUE,
+  scale.by = "radius",
+  scale.min = NA,
+  scale.max = NA
+)
 
 ```
 

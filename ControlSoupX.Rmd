@@ -29,11 +29,11 @@ library(EnhancedVolcano)
 library(slingshot)
 library(RColorBrewer)
 library(scales)
-control <- readRDS("output.nosync/control.rds")
-control.markers <- readRDS("output.nosync/controlmarkers.rds")
-control_gcsubset.markers <- readRDS("output.nosync/control_gcsubsetmarkers.rds")
-control_gcsubset <- readRDS("output.nosync/control_gcsubset.rds")
-control_withoutdoublets <- readRDS("output.nosync/control_withoutdoublets.rds")
+control <- readRDS("output/control.rds")
+control.markers <- readRDS("output/controlmarkers.rds")
+control_gcsubset.markers <- readRDS("output/control_gcsubsetmarkers.rds")
+control_gcsubset <- readRDS("output/control_gcsubset.rds")
+control_withoutdoublets <- readRDS("output/control_withoutdoublets.rds")
 ```
 
 ```{r create-object, message = FALSE, warning = FALSE}
