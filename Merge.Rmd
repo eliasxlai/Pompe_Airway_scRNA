@@ -17,6 +17,7 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 ```{r load-packages, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(Seurat)
+library(enrichR)
 library(DropletUtils)
 library(dplyr)
 library(Matrix)
@@ -107,7 +108,7 @@ saveRDS(gaa_merge.markers, file = "output/gaa_merge.markers.rds")
 ```{r featureplots, message = FALSE, warning = FALSE}
 DimPlot(gaa_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 # Cluster 3: Alveolar Fibroblast
-FeaturePlot(gaa_merge, c("Ces1d", "Pdgfra"))
+FeaturePlot(gaa_merge, c("Ces1d", "Wnt2", "Pdgfra"))
 # Cluster #: Adventitial Fibroblast
 FeaturePlot(gaa_merge, c("Pi16", "Pdgfra"))
 # Cluster #: Pericyte
@@ -224,7 +225,7 @@ DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001)
 ```{r featureplots-merge, message = FALSE, warning = FALSE}
 DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 # Cluster 3: Alveolar Fibroblast
-FeaturePlot(merge, c("Ces1d", "Npnt", "Pdgfra"))
+FeaturePlot(merge, c("Ces1d", "Npnt", "Wnt2", "Pdgfra"))
 # Cluster #: Adventitial Fibroblast
 FeaturePlot(merge, c("Pi16", "Ccl11", "Il33", "Adh7", "Pdgfra"))
 # Cluster #: Pericyte
@@ -774,10 +775,12 @@ DimPlot(merge1, reduction = "umap", label = TRUE, pt.size = 0.001)
 ```
 
 ```{r dotplot, message=FALSE, warning=FALSE}
+markergenes <- c("Ces1d", "Npnt", "Wnt2", "Pdgfra", "Pi16", "Ccl11", "Il33", "Adh7", "Pdgfrb", "Cspg4", "Mcam", "Hhip", "Fgf18", "Dcn", "Msln", "Wt1", "Tmem100", "Ednrb", "Pecam1", "Acta2", "Myh11", "Sftpc", "Sftpd", "Mmrn1", "Lyve1", "Foxj1", "Scgb1a1", "Bpifb1", "Rtkn2", "Cd79b", "Ptprc", "Trbc2", "Cd8b1", "Ly6c2")
+
 DotPlot(
   object = merge,
   assay = NULL,
-  features = rownames(merge),
+  features = markergenes,
   cols = c("lightgrey", "blue"),
   col.min = -2.5,
   col.max = 2.5,
@@ -792,7 +795,6 @@ DotPlot(
   scale.min = NA,
   scale.max = NA
 )
-
 ```
 
 
