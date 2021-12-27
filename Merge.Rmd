@@ -797,4 +797,19 @@ DotPlot(
 )
 ```
 
+```{r cellphonedb, message=FALSE, warning=FALSE}
+# Take raw data and normalize it.
+count_raw <- gaa_merge_withoutdoublets@raw.data[,gaa_merge_withoutdoublets@cell.names]
+count_norm <- apply(count_raw, 2, function(x) (x/sum(x))*10000)
+write.table(count_norm, "cellphonedbfiles/cellphonedb_count.txt", sep="\t", quote=F)
+# Generating metadata file.
+meta_data <- cbind(rownames(gaa_merge_withoutdoublets@meta.data), 
+                   gaa_merge_withoutdoublets@meta.data[,"cluster", drop=F])
+# Cluster is the user’s corresponding cluster column.
+write.table(meta_data, "cellphonedbfiles/cellphonedb_meta.txt", sep="\t", quote=F,
+row.names=F)
+```
+
+
+
 
