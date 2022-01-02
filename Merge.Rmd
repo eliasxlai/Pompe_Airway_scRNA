@@ -842,13 +842,28 @@ s1 <- grepl('Control',alldata@meta.data$condition)
 s2 <- grepl('GAA KO',alldata@meta.data$condition)
 s1[match('gene',colnames(matrix1))] <- TRUE
 s2[match('gene',colnames(matrix1))] <- TRUE
+saveRDS(s1, file = "output/s1.rds")
+saveRDS(s2, file = "output/s2.rds")
 
 ## Checking the dimensions and writing counts table
 print(dim(matrix1[,s1]))
 print(dim(matrix1[,s2]))
 write.table(matrix1[,s1], "cellphonedbfiles/s1_filtered_hcount.csv",row.names=T,sep=',')
 write.table(matrix1[,s2], "cellphonedbfiles/s2_filtered_hcount.csv",row.names=T,sep=',')
+
+# generate metadata
+merge <- StashIdent(merge, save.name = "clusters")
+alldata <- StashIdent(alldata, save.name = "clusters")
+metadata <- data.frame(cells=rownames(alldata@meta.data[grepl('Control',alldata@meta.data$condition),]),
+                       cluster=alldata@meta.data$clusters[grepl('Control',alldata@meta.data$condition)])
+metadata_s2 <- data.frame(cells=rownames(alldata@meta.data[!grepl('Control',alldata@meta.data$condition),]),
+                          cluster=alldata@meta.data$clusters[!grepl('Control',alldata@meta.data$condition)]) ## Just negate grepl('Control',alldata@meta.data$condition),]
+print('Writing Metadata')
+write.csv(metadata, 'cellphonedbfiles/s1_filtered_meta.csv', row.names=FALSE)
+write.csv(metadata_s2, 'cellphonedbfiles/s2_filtered_meta.csv', row.names=FALSE)
 ```
+
+
 
 
 
