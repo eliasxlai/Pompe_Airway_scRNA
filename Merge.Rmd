@@ -889,6 +889,7 @@ cellphone_for_seurat(alld)
 ```
 
 ```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
+# subset based on control vs KO
 GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
 saveRDS(GAAKO, file = "output/GAAKO.rds")
 Control <- subset(x = alldata, subset = condition == "Control")
@@ -897,7 +898,7 @@ saveRDS(Control, file = "output/Control.rds")
 
 # metadata
 meta_data <- data.frame(cells=rownames(GAAKO@meta.data), cluster=GAAKO@meta.data$clusters)
-write.table(meta_data, "GAAKO_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
+write.table(meta_data, "cellphonedbfiles/GAAKO_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
 
 # counts
 matrix1 <- as.data.frame(GAAKO@assays$RNA@data)
@@ -915,7 +916,38 @@ matrix1$gene <- genesV2$Gene.stable.ID
 matrix1 <- matrix1 %>%
   dplyr::select(gene, everything())
 rownames(matrix1) <- NULL
-write.table(matrix1, "cellphonedbfiles/s1_filtered_hcount.csv",row.names=F,sep=',')
+write.table(matrix1, "cellphonedbfiles/GAAKO_filtered_hcount.csv",row.names=F,sep=',')
+```
+
+```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
+# subset based on control vs KO
+GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
+saveRDS(GAAKO, file = "output/GAAKO.rds")
+Control <- subset(x = alldata, subset = condition == "Control")
+saveRDS(Control, file = "output/Control.rds")
+
+
+# metadata
+meta_data <- data.frame(cells=rownames(Control@meta.data), cluster=Control@meta.data$clusters)
+write.table(meta_data, "cellphonedbfiles/Control_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
+
+# counts
+matrix1 <- as.data.frame(Control@assays$RNA@data)
+matrix1 <- matrix1[rowSums(Control[,2:dim(matrix1)[2]])!=0,]
+human = useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
+mouse = useEnsembl("ensembl", dataset = "mmusculus_gene_ensembl")
+genesV2 = getLDS(attributes = c("mgi_symbol"),
+                 filters = "mgi_symbol",
+                 values = rownames(Control@assays$RNA@data) ,
+                 mart = mouse,
+                 attributesL = c("hgnc_symbol","hgnc_id",'ensembl_gene_id'),
+                 martL = human, uniqueRows=T)
+matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(Control)),]
+matrix1$gene <- genesV2$Gene.stable.ID
+matrix1 <- matrix1 %>%
+  dplyr::select(gene, everything())
+rownames(matrix1) <- NULL
+write.table(matrix1, "cellphonedbfiles/Control_filtered_hcount.csv",row.names=F,sep=',')
 ```
 
 
