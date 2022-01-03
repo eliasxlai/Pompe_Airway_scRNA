@@ -919,7 +919,7 @@ rownames(matrix1) <- NULL
 write.table(matrix1, "cellphonedbfiles/GAAKO_filtered_hcount.csv",row.names=F,sep=',')
 ```
 
-```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
+```{r cellphonedb-Control, message=FALSE, warning=FALSE}
 # subset based on control vs KO
 GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
 saveRDS(GAAKO, file = "output/GAAKO.rds")
