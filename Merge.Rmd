@@ -16,6 +16,8 @@ knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA,
 
 ```{r load-packages, message = FALSE, warning = FALSE}
 library(tidyverse)
+library(dplyr)
+library(conflicted)
 library(Seurat)
 library(enrichR)
 library(DropletUtils)
@@ -284,6 +286,7 @@ merge <- RenameIdents(merge,
                     '13' = "Peribronchial",
                     '23' = "Immune")
 DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+merge <- StashIdent(merge, save.name = "clusters")
 saveRDS(merge, file = "output/merge.rds")
 ```
 
@@ -800,33 +803,13 @@ DotPlot(
 )
 ```
 
-```{r cellphonedb1, message=FALSE, warning=FALSE}
-# Take raw data and normalize it.
-count_raw <- gaa_merge_withoutdoublets@raw.data[,gaa_merge_withoutdoublets@cell.names]
-count_norm <- apply(count_raw, 2, function(x) (x/sum(x))*10000)
-write.table(count_norm, "cellphonedbfiles/cellphonedb_count.txt", sep="\t", quote=F)
-# Generating metadata file.
-meta_data <- cbind(rownames(gaa_merge_withoutdoublets@meta.data), 
-                   gaa_merge_withoutdoublets@meta.data[,"cluster", drop=F])
-# Cluster is the user’s corresponding cluster column.
-write.table(meta_data, "cellphonedbfiles/cellphonedb_meta.txt", sep="\t", quote=F,
-row.names=F)
-```
 
-```{r cellphonedb2, message=FALSE, warning=FALSE}
-# Generating metadata file.
-meta_data <- cbind(rownames(merge@meta.data), merge@meta.data[, "seurat_clusters", drop=F])
-# Cluster is the user’s corresponding cluster column.
-write.table(meta_data, "cellphonedbfiles/cellphonedb_meta.txt", sep="\t", quote=F,
-row.names=F)
-```
-
-```{r cellphonedb3, message=FALSE, warning=FALSE}
+```{r cellphonedb, message=FALSE, warning=FALSE}
 # Basic function to convert mouse to human gene names
 alldata <- merge
-allgenes <- rownames(alldata)
-matrix1 <- as.data.frame(alldata@assays$RNA@data)
-matrix1 <- matrix1[rowSums(matrix1[,2:dim(matrix1)[2]])!=0,]
+rm(merge, merge.markers)
+# matrix1 <- as.data.frame(alldata@assays$RNA@data)
+# matrix1 <- matrix1[rowSums(matrix1[,2:dim(matrix1)[2]])!=0,]
 # saveRDS(matrix1, file = "output/matrix1.rds")
 
 ### If you are using a mouse data, then its needed to convert the gene names to human orthologs
@@ -834,8 +817,11 @@ human = useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
 mouse = useEnsembl("ensembl", dataset = "mmusculus_gene_ensembl")
 genesV2 = getLDS(attributes = c("mgi_symbol"), filters = "mgi_symbol", values = rownames(alldata@assays$RNA@data) , mart = mouse, attributesL = c("hgnc_symbol","hgnc_id",'ensembl_gene_id'), martL = human, uniqueRows=T)
 print(head(genesV2))
-matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(alldata),nomatch=F),]
+matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(alldata)),]
 matrix1$gene <- genesV2$Gene.stable.ID
+matrix1 <- matrix1 %>%
+  dplyr::select(gene, everything())
+rownames(matrix1) <- NULL
 
 ### Subseting the matrix
 s1 <- grepl('Control',alldata@meta.data$condition)
@@ -848,12 +834,10 @@ saveRDS(s2, file = "output/s2.rds")
 ## Checking the dimensions and writing counts table
 print(dim(matrix1[,s1]))
 print(dim(matrix1[,s2]))
-write.table(matrix1[,s1], "cellphonedbfiles/s1_filtered_hcount.csv",row.names=T,sep=',')
-write.table(matrix1[,s2], "cellphonedbfiles/s2_filtered_hcount.csv",row.names=T,sep=',')
+write.table(matrix1[,s1], "cellphonedbfiles/s1_filtered_hcount.csv",row.names=F,sep=',')
+write.table(matrix1[,s2], "cellphonedbfiles/s2_filtered_hcount.csv",row.names=F,sep=',')
 
 # generate metadata
-merge <- StashIdent(merge, save.name = "clusters")
-alldata <- StashIdent(alldata, save.name = "clusters")
 metadata <- data.frame(cells=rownames(alldata@meta.data[grepl('Control',alldata@meta.data$condition),]),
                        cluster=alldata@meta.data$clusters[grepl('Control',alldata@meta.data$condition)])
 metadata_s2 <- data.frame(cells=rownames(alldata@meta.data[!grepl('Control',alldata@meta.data$condition),]),
@@ -862,6 +846,79 @@ print('Writing Metadata')
 write.csv(metadata, 'cellphonedbfiles/s1_filtered_meta.csv', row.names=FALSE)
 write.csv(metadata_s2, 'cellphonedbfiles/s2_filtered_meta.csv', row.names=FALSE)
 ```
+
+```{r cellphonedb1, message=FALSE, warning=FALSE}
+cellphone_for_seurat <- function(obj, orgdb, prefix, slot = "data",
+    assay = NULL){
+    flog.info("Using counts from slot %s and assay %s.", slot,
+        ifelse(is.null(assay), DefaultAssay(obj),  assay))
+    counts <- as.data.frame(
+        GetAssayData(obj, slot = slot, assay = assay)
+    )
+    counts <- .fixSymbols(counts)
+    ids <- mapIds(orgdb, rownames(counts), 'ENSEMBL', 'SYMBOL')
+    counts$ensembl_gene_id <- ids
+    counts <- counts[!is.na(counts$ensembl_gene_id),]
+    counts <- cbind(counts[,which(colnames(counts) == 'ensembl_gene_id')], counts)
+
+    colnames(counts)[1] <- 'Gene'
+    counts$ensembl_gene_id <- NULL
+    colnames(counts) <- make.names(colnames(counts))
+
+    metadata <- data.frame(Cell = make.names(Cells(obj)),
+                           cell_type = Idents(obj))
+
+
+    filename <- .get_sub_path(prefix, "cellphonedb", "_counts.txt")
+    flog.info("Writing count matrix to %s...", filename)
+    write.table(counts,
+            file = filename,
+            quote = FALSE,
+            col.names = TRUE,
+            row.names = FALSE,
+            sep = '\t')
+    filename <- .get_sub_path(prefix, "cellphonedb", "_metadata.txt")
+    write.table(metadata,
+            file = filename,
+            quote = FALSE,
+            col.names = TRUE,
+            row.names = FALSE,
+            sep = '\t')
+}
+cellphone_for_seurat(alld)
+```
+
+```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
+GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
+saveRDS(GAAKO, file = "output/GAAKO.rds")
+Control <- subset(x = alldata, subset = condition == "Control")
+saveRDS(Control, file = "output/Control.rds")
+
+
+# metadata
+meta_data <- data.frame(cells=rownames(GAAKO@meta.data), cluster=GAAKO@meta.data$clusters)
+write.table(meta_data, "GAAKO_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
+
+# counts
+matrix1 <- as.data.frame(GAAKO@assays$RNA@data)
+matrix1 <- matrix1[rowSums(GAAKO[,2:dim(matrix1)[2]])!=0,]
+human = useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
+mouse = useEnsembl("ensembl", dataset = "mmusculus_gene_ensembl")
+genesV2 = getLDS(attributes = c("mgi_symbol"),
+                 filters = "mgi_symbol",
+                 values = rownames(GAAKO@assays$RNA@data) ,
+                 mart = mouse,
+                 attributesL = c("hgnc_symbol","hgnc_id",'ensembl_gene_id'),
+                 martL = human, uniqueRows=T)
+matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(GAAKO)),]
+matrix1$gene <- genesV2$Gene.stable.ID
+matrix1 <- matrix1 %>%
+  dplyr::select(gene, everything())
+rownames(matrix1) <- NULL
+write.table(matrix1, "cellphonedbfiles/s1_filtered_hcount.csv",row.names=F,sep=',')
+```
+
+
 
 
 
