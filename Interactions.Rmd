@@ -43,7 +43,7 @@ col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 # merge.markers <- readRDS("output/merge.markers.rds")
 
 cellchat <- readRDS("output/cellchat.rds")
-load(cellchat.RData)
+# load(cellchat.RData)
 
 ```
 
@@ -152,10 +152,10 @@ for (i in 1:nrow(mat)) {
 }
 
 # Signaling pathways showing significant communications
-cellchat@netP$pathways
+View(cellchat@netP$pathways)
 
 # Visualization of specific signaling pathways
-pathways.show <- c("CXCL") 
+pathways.show <- c("COLLAGEN") 
 # Hierarchy plot
 # Here we define `vertex.receive` so that the left portion of the hierarchy plot shows signaling to fibroblast and the right portion shows signaling to immune cells 
 vertex.receiver = seq(1,4) # a numeric vector. 
@@ -165,7 +165,7 @@ par(mfrow=c(1,1))
 netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
 # Chord diagram
 par(mfrow=c(1,1))
-netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+# netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord") # supposed to work
 #> Note: The first link end is drawn out of sector 'Inflam. FIB'.
 # Heatmap
 par(mfrow=c(1,1))
@@ -182,12 +182,15 @@ pathways.show.all <- cellchat@netP$pathways
 # check the order of cell identity to set suitable vertex.receiver
 levels(cellchat@idents)
 vertex.receiver = seq(1,4)
+setwd(Volumes/SanDiskExtreme/Pompe_Airway_scRNA/CellChat_Plots)
 for (i in 1:length(pathways.show.all)) {
   # Visualize communication network associated with both signaling pathway and individual L-R pairs
-  netVisual(cellchat, signaling = pathways.show.all[i], vertex.receiver = vertex.receiver, layout = "hierarchy")
+  netVisual(cellchat, signaling = pathways.show.all[i], 
+            vertex.receiver = vertex.receiver, layout = "hierarchy", 
+            out.format =  "png")
   # Compute and visualize the contribution of each ligand-receptor pair to the overall signaling pathway
   gg <- netAnalysis_contribution(cellchat, signaling = pathways.show.all[i])
-  ggsave(filename=paste0(pathways.show.all[i], "_L-R_contribution.pdf"), plot=gg, width = 3, height = 2, units = 'in', dpi = 300)
+  ggsave(filename=paste0(pathways.show.all[i], "_L-R_contribution.pdf"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300)
 }
 
 # Visualize cell-cell communication mediated by multiple ligand-receptors or signaling pathways
@@ -195,7 +198,7 @@ for (i in 1:length(pathways.show.all)) {
 netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11), remove.isolate = FALSE)
 #> Comparing communications on a single object
 # show all the significant interactions (L-R pairs) associated with certain signaling pathways
-netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11), signaling = c("CCL","CXCL"), remove.isolate = FALSE)
+netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11), signaling = c("LAMININ","COLLAGEN"), remove.isolate = FALSE)
 #> Comparing communications on a single object
 ```
 
