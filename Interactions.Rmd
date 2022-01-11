@@ -1,0 +1,116 @@
+---
+title: "Interactions"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(dplyr)
+library(conflicted)
+library(Seurat)
+library(CellChat)
+library(patchwork)
+library(enrichR)
+library(DropletUtils)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(biomaRt)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+options(future.globals.maxSize= 8912896000000)
+col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
+
+merge <- readRDS("output/merge.rds")
+merge.markers <- readRDS("output/merge.markers.rds")
+```
+
+```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
+# subset based on control vs KO
+GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
+saveRDS(GAAKO, file = "output/GAAKO.rds")
+Control <- subset(x = alldata, subset = condition == "Control")
+saveRDS(Control, file = "output/Control.rds")
+
+
+# metadata
+meta_data <- data.frame(cells=rownames(GAAKO@meta.data), cluster=GAAKO@meta.data$clusters)
+write.table(meta_data, "cellphonedbfiles/GAAKO_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
+
+# counts
+matrix1 <- as.data.frame(GAAKO@assays$RNA@data)
+matrix1 <- matrix1[rowSums(GAAKO[,2:dim(matrix1)[2]])!=0,]
+human = useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
+mouse = useEnsembl("ensembl", dataset = "mmusculus_gene_ensembl")
+genesV2 = getLDS(attributes = c("mgi_symbol"),
+                 filters = "mgi_symbol",
+                 values = rownames(GAAKO@assays$RNA@data) ,
+                 mart = mouse,
+                 attributesL = c("hgnc_symbol","hgnc_id",'ensembl_gene_id'),
+                 martL = human, uniqueRows=T)
+matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(GAAKO)),]
+matrix1$gene <- genesV2$Gene.stable.ID
+matrix1 <- matrix1 %>%
+  dplyr::select(gene, everything())
+rownames(matrix1) <- NULL
+write.table(matrix1, "cellphonedbfiles/GAAKO_filtered_hcount.csv",row.names=F,sep=',')
+```
+
+```{r cellphonedb-Control, message=FALSE, warning=FALSE}
+# subset based on control vs KO
+GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
+saveRDS(GAAKO, file = "output/GAAKO.rds")
+Control <- subset(x = alldata, subset = condition == "Control")
+saveRDS(Control, file = "output/Control.rds")
+
+
+# metadata
+meta_data <- data.frame(cells=rownames(Control@meta.data), cluster=Control@meta.data$clusters)
+write.table(meta_data, "cellphonedbfiles/Control_cellphonedb_meta.txt", sep="\t", quote=F, row.names=F)
+
+# counts
+matrix1 <- as.data.frame(Control@assays$RNA@data)
+matrix1 <- matrix1[rowSums(Control[,2:dim(matrix1)[2]])!=0,]
+human = useEnsembl("ensembl", dataset = "hsapiens_gene_ensembl")
+mouse = useEnsembl("ensembl", dataset = "mmusculus_gene_ensembl")
+genesV2 = getLDS(attributes = c("mgi_symbol"),
+                 filters = "mgi_symbol",
+                 values = rownames(Control@assays$RNA@data) ,
+                 mart = mouse,
+                 attributesL = c("hgnc_symbol","hgnc_id",'ensembl_gene_id'),
+                 martL = human, uniqueRows=T)
+matrix1 <- matrix1[match(genesV2$MGI.symbol,rownames(Control)),]
+matrix1$gene <- genesV2$Gene.stable.ID
+matrix1 <- matrix1 %>%
+  dplyr::select(gene, everything())
+rownames(matrix1) <- NULL
+write.table(matrix1, "cellphonedbfiles/Control_filtered_hcount.csv",row.names=F,sep=',')
+```
+
+
+
+
+
+
+
+
+
+
