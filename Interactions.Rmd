@@ -41,13 +41,14 @@ col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 
 merge <- readRDS("output/merge.rds")
 merge.markers <- readRDS("output/merge.markers.rds")
+
 ```
 
 ```{r cellphonedb-GAAKO, message=FALSE, warning=FALSE}
 # subset based on control vs KO
-GAAKO <- subset(x = alldata, subset = condition == "GAA KO")
+GAAKO <- subset(x = merge, subset = condition == "GAA KO")
 saveRDS(GAAKO, file = "output/GAAKO.rds")
-Control <- subset(x = alldata, subset = condition == "Control")
+Control <- subset(x = merge, subset = condition == "Control")
 saveRDS(Control, file = "output/Control.rds")
 
 
@@ -104,6 +105,22 @@ matrix1 <- matrix1 %>%
 rownames(matrix1) <- NULL
 write.table(matrix1, "cellphonedbfiles/Control_filtered_hcount.csv",row.names=F,sep=',')
 ```
+
+```{r cellchatGAAKO, message=FALSE, warning=FALSE}
+options(stringsAsFactors = FALSE)
+load(url("https://ndownloader.figshare.com/files/25950872")) # example input for creating CellChat object
+
+# Setting up cellchat object
+cellchatGAAKO <- createCellChat(object = GAAKO, group.by = "clusters")
+levels(cellchat@idents) # show factor levels of the cell labels
+groupSize <- as.numeric(table(cellchat@idents)) # number of cells in each cell group
+CellChatDB <- CellChatDB.mouse
+
+# subset the expression data of signaling genes for saving computation cost
+cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
+
+```
+
 
 
 

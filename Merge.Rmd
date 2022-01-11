@@ -264,7 +264,8 @@ FeaturePlot(merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 
 ```{r relabeling, message=FALSE, warning=FALSE}
 merge <- FindClusters(object = merge, resolution = 1)
-merge <- RenameIdents(merge, 
+merge <- RenameIdents(merge,
+                    '0' = "Endothelial2",
                     '3' = "Endothelial",
                     '12' = "Endothelial",
                     '15' = "LymphaticEndothelial",
