@@ -108,17 +108,92 @@ write.table(matrix1, "cellphonedbfiles/Control_filtered_hcount.csv",row.names=F,
 
 ```{r cellchatGAAKO, message=FALSE, warning=FALSE}
 options(stringsAsFactors = FALSE)
-load(url("https://ndownloader.figshare.com/files/25950872")) # example input for creating CellChat object
+# load(url("https://ndownloader.figshare.com/files/25950872")) # example input for creating CellChat object
 
 # Setting up cellchat object
-cellchatGAAKO <- createCellChat(object = GAAKO, group.by = "clusters")
+cellchat <- createCellChat(object = GAAKO, group.by = "clusters")
 levels(cellchat@idents) # show factor levels of the cell labels
 groupSize <- as.numeric(table(cellchat@idents)) # number of cells in each cell group
+
+# set the ligand-receptor interaction database
 CellChatDB <- CellChatDB.mouse
+CellChatDB.use <- CellChatDB # use all CellChatDB for cell-cell communication analysis (simply use the default CellChatDB)
+cellchat@DB <- CellChatDB.use # set the used database in the object
 
 # subset the expression data of signaling genes for saving computation cost
 cellchat <- subsetData(cellchat) # This step is necessary even if using the whole database
+future::plan("multiprocess", workers = 4) # do parallel
+cellchat <- identifyOverExpressedGenes(cellchat)
+cellchat <- identifyOverExpressedInteractions(cellchat)
+cellchat <- projectData(cellchat, PPI.mouse) # project gene expression data onto PPI network (optional)
 
+# compute probabilities
+cellchat <- computeCommunProb(cellchat) # computing communication probability and infer cellular communication network
+cellchat <- filterCommunication(cellchat, min.cells = 10) # Filter cell groups with few number of cells
+cellchat <- computeCommunProbPathway(cellchat) # infer cell-cell communication at a signaling pathway level
+# saveRDS(cellchat, file = "output/cellchat.rds")
+
+# calculate aggregated cell-cellcommunication network
+cellchat <- aggregateNet(cellchat) # calculate aggregated cell-cell communication network
+groupSize <- as.numeric(table(cellchat@idents))
+par(mfrow = c(1,2), xpd=TRUE)
+netVisual_circle(cellchat@net$count, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Number of interactions")
+netVisual_circle(cellchat@net$weight, vertex.weight = groupSize, weight.scale = T, label.edge= F, title.name = "Interaction weights/strength")
+# control parameter edge.weight.max to compare edge weights between different networks
+mat <- cellchat@net$weight
+par(mfrow = c(3,4), xpd=TRUE)
+for (i in 1:nrow(mat)) {
+  mat2 <- matrix(0, nrow = nrow(mat), ncol = ncol(mat), dimnames = dimnames(mat))
+  mat2[i, ] <- mat[i, ]
+  netVisual_circle(mat2, vertex.weight = groupSize, weight.scale = T, edge.weight.max = max(mat), title.name = rownames(mat)[i])
+}
+
+# Signaling pathways showing significant communications
+cellchat@netP$pathways
+
+# Visualization of specific signaling pathways
+pathways.show <- c("CXCL") 
+# Hierarchy plot
+# Here we define `vertex.receive` so that the left portion of the hierarchy plot shows signaling to fibroblast and the right portion shows signaling to immune cells 
+vertex.receiver = seq(1,4) # a numeric vector. 
+netVisual_aggregate(cellchat, signaling = pathways.show,  vertex.receiver = vertex.receiver)
+# Circle plot
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "circle")
+# Chord diagram
+par(mfrow=c(1,1))
+netVisual_aggregate(cellchat, signaling = pathways.show, layout = "chord")
+#> Note: The first link end is drawn out of sector 'Inflam. FIB'.
+# Heatmap
+par(mfrow=c(1,1))
+netVisual_heatmap(cellchat, signaling = pathways.show, color.heatmap = "Reds")
+#> Do heatmap based on a single object
+# skipped some stuff from the tutorial
+
+# compute contribution of each ligand-receptor pair to the overall signaling pathway and visualize cell-cell communication mediated by a single ligand-receptor pair
+netAnalysis_contribution(cellchat, signaling = pathways.show)
+
+# save plots of the all inferred network
+# Access all the signaling pathways showing significant communications
+pathways.show.all <- cellchat@netP$pathways
+# check the order of cell identity to set suitable vertex.receiver
+levels(cellchat@idents)
+vertex.receiver = seq(1,4)
+for (i in 1:length(pathways.show.all)) {
+  # Visualize communication network associated with both signaling pathway and individual L-R pairs
+  netVisual(cellchat, signaling = pathways.show.all[i], vertex.receiver = vertex.receiver, layout = "hierarchy")
+  # Compute and visualize the contribution of each ligand-receptor pair to the overall signaling pathway
+  gg <- netAnalysis_contribution(cellchat, signaling = pathways.show.all[i])
+  ggsave(filename=paste0(pathways.show.all[i], "_L-R_contribution.pdf"), plot=gg, width = 3, height = 2, units = 'in', dpi = 300)
+}
+
+# Visualize cell-cell communication mediated by multiple ligand-receptors or signaling pathways
+# show all the significant interactions (L-R pairs) from some cell groups (defined by 'sources.use') to other cell groups (defined by 'targets.use')
+netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11), remove.isolate = FALSE)
+#> Comparing communications on a single object
+# show all the significant interactions (L-R pairs) associated with certain signaling pathways
+netVisual_bubble(cellchat, sources.use = 4, targets.use = c(5:11), signaling = c("CCL","CXCL"), remove.isolate = FALSE)
+#> Comparing communications on a single object
 ```
 
 
