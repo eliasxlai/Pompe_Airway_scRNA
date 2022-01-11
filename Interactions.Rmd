@@ -39,8 +39,9 @@ library(scales)
 options(future.globals.maxSize= 8912896000000)
 col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 
-merge <- readRDS("output/merge.rds")
-merge.markers <- readRDS("output/merge.markers.rds")
+# merge <- readRDS("output/merge.rds")
+# merge.markers <- readRDS("output/merge.markers.rds")
+load(cellchat.RData)
 
 ```
 
