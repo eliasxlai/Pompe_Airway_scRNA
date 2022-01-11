@@ -182,7 +182,7 @@ pathways.show.all <- cellchat@netP$pathways
 # check the order of cell identity to set suitable vertex.receiver
 levels(cellchat@idents)
 vertex.receiver = seq(1,4)
-setwd(Volumes/SanDiskExtreme/Pompe_Airway_scRNA/CellChat_Plots)
+setwd("CellChat_Plots")
 for (i in 1:length(pathways.show.all)) {
   # Visualize communication network associated with both signaling pathway and individual L-R pairs
   netVisual(cellchat, signaling = pathways.show.all[i], 
@@ -192,6 +192,7 @@ for (i in 1:length(pathways.show.all)) {
   gg <- netAnalysis_contribution(cellchat, signaling = pathways.show.all[i])
   ggsave(filename=paste0(pathways.show.all[i], "_L-R_contribution.pdf"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300)
 }
+setwd("..")
 
 # Visualize cell-cell communication mediated by multiple ligand-receptors or signaling pathways
 # show all the significant interactions (L-R pairs) from some cell groups (defined by 'sources.use') to other cell groups (defined by 'targets.use')
