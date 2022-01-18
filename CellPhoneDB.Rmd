@@ -1,5 +1,5 @@
 ---
-title: "Interactions"
+title: "CellPhoneDB"
 author: "Elias Lai"
 subtitle: ElMallah Lab, Duke University
 output:
