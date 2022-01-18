@@ -254,9 +254,53 @@ netVisual_bubble(Control_cellchat, sources.use = 4, targets.use = c(5:11), signa
 ```
 
 ```{r comparison, message=FALSE, warning=FALSE}
-View(GAAKO_cellchat@netP$pathways)
-diff <- setdiff(GAAKO_cellchat@netP$pathways, Control_cellchat@netP$pathways)
+# cd into directory for figures
+setwd("Comparison")
 
+# merge datasets
+object.list <- list(GAAKO = GAAKO_cellchat, Control = Control_cellchat)
+cellchat <- mergeCellChat(object.list, add.names = names(object.list))
+
+# compare interactions
+gg1 <- compareInteractions(cellchat, show.legend = F, group = c(1,2))
+gg2 <- compareInteractions(cellchat, show.legend = F, group = c(1,2), measure = "weight")
+gg1 + gg2
+
+# Differential number of interactions or interaction strength among different cell populations
+par(mfrow = c(1,2), xpd=TRUE)
+netVisual_diffInteraction(cellchat, weight.scale = T)
+netVisual_diffInteraction(cellchat, weight.scale = T, measure = "weight")
+
+# Differential number of interactions with heatmap
+gg1 <- netVisual_heatmap(cellchat)
+gg2 <- netVisual_heatmap(cellchat, measure = "weight")
+gg1 + gg2
+
+# Compare outgoing and incoming interaction strength in 2D space
+cellchat <- netAnalysis_computeCentrality(cellchat, slot.name = "netP")
+num.link <- sapply(object.list, function(x) {rowSums(x@net$count) + colSums(x@net$count)-diag(x@net$count)})
+weight.MinMax <- c(min(num.link), max(num.link)) # control the dot size in the different datasets
+gg <- list()
+for (i in 1:length(object.list)) {
+  gg[[i]] <- netAnalysis_signalingRole_scatter(object.list[[i]], title = names(object.list)[i], weight.MinMax = weight.MinMax)
+}
+patchwork::wrap_plots(plots = gg)
+
+# Identify signaling groups based on their functional similarity
+cellchat <- computeNetSimilarityPairwise(cellchat, type = "functional")
+cellchat <- netEmbedding(cellchat, type = "functional")
+cellchat <- netClustering(cellchat, type = "functional")
+# Visualization in 2D-space
+netVisual_embeddingPairwise(cellchat, type = "functional", label.size = 3.5)
+# netVisual_embeddingZoomIn(cellchat, type = "functional", nCol = 2)
+
+# Identify signaling groups based on structure similarity
+cellchat <- computeNetSimilarityPairwise(cellchat, type = "structural")
+cellchat <- netEmbedding(cellchat, type = "structural")
+cellchat <- netClustering(cellchat, type = "structural")
+# Visualization in 2D-space
+netVisual_embeddingPairwise(cellchat, type = "structural", label.size = 3.5)
+netVisual_embeddingPairwiseZoomIn(cellchat, type = "structural", nCol = 2)
 ```
 
 
