@@ -254,6 +254,8 @@ netVisual_bubble(Control_cellchat, sources.use = 4, targets.use = c(5:11), signa
 ```
 
 ```{r comparison, message=FALSE, warning=FALSE}
+View(GAAKO_cellchat@netP$pathways)
+diff <- setdiff(GAAKO_cellchat@netP$pathways, Control_cellchat@netP$pathways)
 
 ```
 
