@@ -1,5 +1,5 @@
 ---
-title: "Interactions"
+title: "CellChat_Prep"
 author: "Elias Lai"
 subtitle: ElMallah Lab, Duke University
 output:
@@ -41,17 +41,18 @@ library(scales)
 options(future.globals.maxSize= 8912896000000)
 col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 options(stringsAsFactors = FALSE)
+conflict_prefer("union", "BiocGenerics")
 
 # merge <- readRDS("output/merge.rds")
 # merge.markers <- readRDS("output/merge.markers.rds")
 
-GAAKO_cellchat <- readRDS("output/GAAKO_cellchat.rds")
-Control_cellchat <- readRDS("output/Control_cellchat.rds")
+# GAAKO_cellchat <- readRDS("output/GAAKO_cellchat.rds")
+# Control_cellchat <- readRDS("output/Control_cellchat.rds")
 # load(cellchat.RData)
 
 ```
 
-```{r subset, message=FAlSE, warning=FALSE}
+```{r subset, message=FAlSE, warning=FALSE, eval = FALSE}
 # subset based on control vs KO
 GAAKO <- subset(x = merge, subset = condition == "GAA KO")
 # saveRDS(GAAKO, file = "output/GAAKO.rds")
@@ -62,7 +63,7 @@ saveRDS(cellchat, file = "output/cellchat.rds")
 ```
 
 
-```{r GAAKO_cellchat, message=FALSE, warning=FALSE}
+```{r GAAKO_cellchat, message=FALSE, warning=FALSE, eval = FALSE}
 options(stringsAsFactors = FALSE)
 # load(url("https://ndownloader.figshare.com/files/25950872")) # example input for creating CellChat object
 
@@ -197,7 +198,7 @@ netVisual_embeddingZoomIn(GAAKO_cellchat, type = "structural", nCol = 2)
 saveRDS(GAAKO_cellchat, file = "output/GAAKO_cellchat.rds")
 ```
 
-```{r Control_cellchat, message=FALSE, warning=FALSE}
+```{r Control_cellchat, message=FALSE, warning=FALSE, eval = FALSE}
 options(stringsAsFactors = FALSE)
 # load(url("https://ndownloader.figshare.com/files/25950872")) # example input for creating CellChat object
 
@@ -332,7 +333,7 @@ netVisual_embeddingZoomIn(Control_cellchat, type = "structural", nCol = 2)
 saveRDS(Control_cellchat, file = "output/Control_cellchat.rds")
 ```
 
-```{r comparison, message=FALSE, warning=FALSE}
+```{r comparison, message=FALSE, warning=FALSE, eval = FALSE}
 # cd into directory for figures
 # GAAKO_cellchat <- readRDS("output/GAAKO_cellchat.rds")
 # Control_cellchat <- readRDS("output/Control_cellchat.rds")
@@ -502,8 +503,3 @@ saveRDS(cellchat, file = "output/cellchat.rds")
 
 
 ```
-
-
-
-
-
