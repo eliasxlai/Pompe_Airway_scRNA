@@ -214,6 +214,8 @@ plotGeneExpression(cellchat, signaling = "BMP", split.by = "datasets", colors.gg
 # Identified pathways1
 identified_pathways1 <- c("EPHB", "CHEMERIN", "SEMA6", "CDH", "AGRN", "VTN", "BMP", "ANGPT", "SEMA7", "GALECTIN", "KIT", "ncWNT", "PERIOSTIN", "CDH1", "VISFATIN", "EGF", "PTPRM", "CD34")
 
+failed_pathways <- c("TRAIL", "ICAM", "PTN", "ITGAL-ITGB2", "RELN")
+
 # Heatmap
 k = 1
 for (k in 1:length(identified_pathways1)) {
@@ -227,6 +229,22 @@ for (k in 1:length(identified_pathways1)) {
 }
 ```
 
+```{r pathway2_specific_heatmaps, message=FALSE, warning=FALSE}
+# Identified pathways2
+identified_pathways2 <- c("TRAIL", "ICAM", "PTN", "ITGAL-ITGB2", "GALECTIN", "KIT", "RELN", "ncWNT", "PERIOSTIN", "CDH1", "VISFATIN", "EGF", "PTPRM", "CD34")
+
+# Heatmap
+k = 1
+for (k in 1:length(identified_pathways2)) {
+  pathways.show <- c("identified_pathways2[k]") 
+  par(mfrow = c(1,2), xpd=TRUE)
+  ht <- list()
+  for (i in 1:length(object.list)) {
+    ht[[i]] <- netVisual_heatmap(object.list[[i]], signaling = pathways.show, color.heatmap = "Reds",title.name = paste(pathways.show, "signaling ",names(object.list)[i]))
+  }
+  ComplexHeatmap::draw(ht[[1]] + ht[[2]], ht_gap = unit(0.5, "cm"), row_title_gp = gpar(fontsize = 25), column_title_gp = gpar(fontsize = 25))
+}
+```
 
 ```{r}
 
