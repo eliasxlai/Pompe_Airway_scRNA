@@ -265,6 +265,8 @@ gg1 <- FeaturePlot(merge, c("Col4a1"))
 gg2 <- DimPlot(merge, reduction = "umap", label = F,group.by = "condition")
 gg3 <- DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 gg1 + gg2 + gg3
+
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
 ```
 
 

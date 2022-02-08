@@ -322,6 +322,8 @@ lymphaticendothelial <- subset(x = merge, idents = "LymphaticEndothelial")
 saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial.rds")
 peribronchial <- subset(x = merge, idents = "Peribronchial")
 saveRDS(peribronchial, file = "output/peribronchial.rds")
+seven <- subset(x = merge, idents = "7")
+saveRDS(seven, file = "output/seven.rds")
 ```
 
 ```{r idents+markers, message=FALSE, warning=FALSE}
@@ -382,6 +384,11 @@ saveRDS(peribronchial.markers, file = "output/peribronchial.markers.rds")
 Idents(lymphaticendothelial) <- lymphaticendothelial$condition
 lymphaticendothelial.markers <- FindMarkers(lymphaticendothelial,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(lymphaticendothelial.markers, file = "output/lymphaticendothelial.markers.rds")
+
+# Seven
+Idents(seven) <- seven$condition
+seven.markers <- FindMarkers(seven,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(seven.markers, file = "output/seven.markers.rds")
 ```
 
 ```{r resave-all-subsets, message=FALSE, warning=FALSE}
