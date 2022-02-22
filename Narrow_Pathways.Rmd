@@ -223,7 +223,7 @@ EnhancedVolcano(type1pneumocyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(ciliated.markers,
@@ -450,8 +450,37 @@ EnhancedVolcano(peribronchial.markers,
                 legendIconSize = 4.0,
                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
+
+EnhancedVolcano(seven.markers,
+                title = "Control vs GAA KD, Seven",
+                selectLab = bmp_genes,
+                lab = rownames(seven.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
 ```
 
+```{r}
+FeaturePlot(merge, c("Bmpr2"), split.by = "condition")
+VlnPlot(merge, "Ppfibp1", split.by = "condition", pt.size = 0)
+```
 
 
 
