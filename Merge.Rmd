@@ -265,7 +265,7 @@ FeaturePlot(merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
 ```{r relabeling, message=FALSE, warning=FALSE}
 merge <- FindClusters(object = merge, resolution = 1)
 merge <- RenameIdents(merge,
-                    '0' = "Endothelial2",
+                    '0' = "Endothelial",
                     '3' = "Endothelial",
                     '12' = "Endothelial",
                     '15' = "LymphaticEndothelial",
@@ -295,7 +295,7 @@ saveRDS(merge, file = "output/merge.rds")
 ```
 
 ```{r finalsubsets, message=FALSE, warning=FALSE}
-endothelial <- subset(x = merge, idents = "Endothelial")
+endothelial <- subset(x = merge, idents = c("Endothelial", "Endothelial2"))
 saveRDS(endothelial, file = "output/endothelial.rds")
 smoothmuscle <- subset(x = merge, idents = "SmoothMuscle")
 saveRDS(smoothmuscle, file = "output/smoothmuscle.rds")
