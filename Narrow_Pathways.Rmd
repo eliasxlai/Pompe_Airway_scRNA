@@ -123,7 +123,7 @@ EnhancedVolcano(endothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(smoothmuscle.markers,
@@ -148,7 +148,7 @@ EnhancedVolcano(smoothmuscle.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(pericyte.markers,
@@ -173,7 +173,7 @@ EnhancedVolcano(pericyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(type2pneumocyte.markers,
@@ -198,7 +198,7 @@ EnhancedVolcano(type2pneumocyte.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(type1pneumocyte.markers,
@@ -248,7 +248,7 @@ EnhancedVolcano(ciliated.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(mesothelial.markers,
@@ -273,7 +273,7 @@ EnhancedVolcano(mesothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(adventitialfibroblast.markers,
@@ -298,7 +298,7 @@ EnhancedVolcano(adventitialfibroblast.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(alveolarfibroblast.markers,
@@ -323,7 +323,7 @@ EnhancedVolcano(alveolarfibroblast.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(gcb.markers,
@@ -348,7 +348,7 @@ EnhancedVolcano(gcb.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(immune.markers,
@@ -373,7 +373,7 @@ EnhancedVolcano(immune.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(capillaryendothelial.markers,
@@ -398,7 +398,7 @@ EnhancedVolcano(capillaryendothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(lymphaticendothelial.markers,
@@ -423,7 +423,7 @@ EnhancedVolcano(lymphaticendothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(peribronchial.markers,
@@ -448,7 +448,7 @@ EnhancedVolcano(peribronchial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
 EnhancedVolcano(seven.markers,
@@ -473,11 +473,89 @@ EnhancedVolcano(seven.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 ```
 
-```{r}
+```{r subset_gcb, message=FALSE, warning=FALSE}
+gcb <- readRDS("output/gcb.rds")
+gcb.markers <- readRDS("output/gcb.markers.rds")
+gcb <- NormalizeData(gcb, normalization.method = "LogNormalize", scale.factor = 10000)
+gcb <- FindVariableFeatures(gcb, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gcb)
+gcb <- ScaleData(gcb, features = all.genes)
+gcb <- RunPCA(object = gcb, verbose = FALSE)
+ElbowPlot(gcb, ndims = 30)
+gcb <- FindNeighbors(object = gcb, dims = 1:20)
+gcb <- FindClusters(object = gcb, resolution = 1)
+gcb <- RunUMAP(object = gcb, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+DimPlot(gcb, reduction = "umap", label = TRUE)
+DimPlot(gcb, reduction = "umap", label = F,group.by = "condition")
+saveRDS(gcb, file = "output/gcb.rds")
+gcb.markers <- FindAllMarkers(gcb, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gcb.markers, file = "output/gcb.markers.rds")
+DimPlot(gcb, reduction = "umap", label = TRUE, pt.size = 0.001)
+
+FeaturePlot(gcb, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
+gcb <- FindClusters(object = gcb, resolution = 8)
+DimPlot(gcb, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+DimPlot(gcb, reduction = "umap", label = F,group.by = "condition")
+
+# Cleaned
+
+gcb_rm_clusters <- c(5, 3)
+gcb_cleaned <- subset(x = gcb, idents = gcb_rm_clusters, invert = TRUE)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+saveRDS(gcb_cleaned, file = "output/gcb_cleaned.rds")
+
+gcb_cleaned <- NormalizeData(gcb_cleaned, normalization.method = "LogNormalize", scale.factor = 10000)
+gcb_cleaned <- FindVariableFeatures(gcb_cleaned, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gcb_cleaned)
+gcb_cleaned <- ScaleData(gcb_cleaned, features = all.genes)
+gcb_cleaned <- RunPCA(object = gcb_cleaned, verbose = FALSE)
+ElbowPlot(gcb_cleaned, ndims = 30)
+gcb_cleaned <- FindNeighbors(object = gcb_cleaned, dims = 1:20)
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 1)
+gcb_cleaned <- RunUMAP(object = gcb_cleaned, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE)
+DimPlot(gcb_cleaned, reduction = "umap", label = F,group.by = "condition")
+saveRDS(gcb_cleaned, file = "output/gcb_cleaned.rds")
+gcb_cleaned.markers <- FindAllMarkers(gcb_cleaned, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gcb_cleaned.markers, file = "output/gcb_cleaned.markers.rds")
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001)
+
+FeaturePlot(gcb_cleaned, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 8)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+DimPlot(gcb_cleaned, reduction = "umap", label = F,group.by = "condition")
+
+# Subset gcb
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 1)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+basal <- subset(x = gcb_cleaned, idents = c(2))
+goblet <- subset(x = gcb_cleaned, idents = c(1))
+club <- subset(x = gcb_cleaned, idents = c(0, 4))
+
+#goblet+club+basal prep
+Idents(goblet) <- goblet$condition
+goblet.markers <- FindMarkers(goblet,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(goblet.markers, file = "output/goblet.markers.rds")
+saveRDS(goblet, file = "output/goblet")
+
+Idents(basal) <- basal$condition
+basal.markers <- FindMarkers(basal,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(basal.markers, file = "output/basal.markers.rds")
+saveRDS(basal, file = "output/basal")
+
+Idents(club) <- club$condition
+club.markers <- FindMarkers(club,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(club.markers, file = "output/club.markers.rds")
+saveRDS(club, file = "output/club")
+```
+
+
+
+```{r vln_and_featureplots, message=FALSE, warning=FALSE}
 FeaturePlot(merge, c("Bmpr2"), split.by = "condition")
 VlnPlot(merge, "Ppfibp1", split.by = "condition", pt.size = 0)
 ```

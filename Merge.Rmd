@@ -313,6 +313,7 @@ alveolarfibroblast <- subset(x = merge, idents = "AlveolarFibroblast")
 adventitialfibroblast <- subset(x = merge, idents = "AdventitialFibroblast")
 gcb <- subset(x = merge, idents = "Goblet+Club+Basal")
 saveRDS(gcb, file = "output/gcb.rds")
+
 immune <- subset(x = merge, idents = "Immune")
 saveRDS(immune, file = "output/immune.rds")
 
@@ -324,7 +325,261 @@ peribronchial <- subset(x = merge, idents = "Peribronchial")
 saveRDS(peribronchial, file = "output/peribronchial.rds")
 seven <- subset(x = merge, idents = "7")
 saveRDS(seven, file = "output/seven.rds")
+fourteen <- subset(x = merge, idents = c(14))
+saveRDS(fourteen, file = "output/fourteen.rds")
+twentyfive <- subset(x = merge, idents = c(25))
+saveRDS(twentyfive, file = "output/twentyfive.rds")
 ```
+
+```{r clean+subset_gcb, message=FALSE, warning=FALSE}
+gcb <- readRDS("output/gcb.rds")
+gcb.markers <- readRDS("output/gcb.markers.rds")
+gcb <- NormalizeData(gcb, normalization.method = "LogNormalize", scale.factor = 10000)
+gcb <- FindVariableFeatures(gcb, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gcb)
+gcb <- ScaleData(gcb, features = all.genes)
+gcb <- RunPCA(object = gcb, verbose = FALSE)
+ElbowPlot(gcb, ndims = 30)
+gcb <- FindNeighbors(object = gcb, dims = 1:20)
+gcb <- FindClusters(object = gcb, resolution = 1)
+gcb <- RunUMAP(object = gcb, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+DimPlot(gcb, reduction = "umap", label = TRUE)
+DimPlot(gcb, reduction = "umap", label = F,group.by = "condition")
+saveRDS(gcb, file = "output/gcb.rds")
+gcb.markers <- FindAllMarkers(gcb, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gcb.markers, file = "output/gcb.markers.rds")
+DimPlot(gcb, reduction = "umap", label = TRUE, pt.size = 0.001)
+
+FeaturePlot(gcb, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
+gcb <- FindClusters(object = gcb, resolution = 8)
+DimPlot(gcb, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+DimPlot(gcb, reduction = "umap", label = F,group.by = "condition")
+
+# Cleaned
+
+gcb_rm_clusters <- c(5, 3)
+gcb_cleaned <- subset(x = gcb, idents = gcb_rm_clusters, invert = TRUE)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+saveRDS(gcb_cleaned, file = "output/gcb_cleaned.rds")
+
+gcb_cleaned <- NormalizeData(gcb_cleaned, normalization.method = "LogNormalize", scale.factor = 10000)
+gcb_cleaned <- FindVariableFeatures(gcb_cleaned, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(gcb_cleaned)
+gcb_cleaned <- ScaleData(gcb_cleaned, features = all.genes)
+gcb_cleaned <- RunPCA(object = gcb_cleaned, verbose = FALSE)
+ElbowPlot(gcb_cleaned, ndims = 30)
+gcb_cleaned <- FindNeighbors(object = gcb_cleaned, dims = 1:20)
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 1)
+gcb_cleaned <- RunUMAP(object = gcb_cleaned, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE)
+DimPlot(gcb_cleaned, reduction = "umap", label = F,group.by = "condition")
+saveRDS(gcb_cleaned, file = "output/gcb_cleaned.rds")
+gcb_cleaned.markers <- FindAllMarkers(gcb_cleaned, only.pos = TRUE, min.pct = 0.25, logfc.threshold = 0.25)
+saveRDS(gcb_cleaned.markers, file = "output/gcb_cleaned.markers.rds")
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001)
+
+FeaturePlot(gcb_cleaned, c("Scgb1a1", "Bpifb1", "Sox2", "Krt5"))
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 8)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+DimPlot(gcb_cleaned, reduction = "umap", label = F,group.by = "condition")
+
+# Subset gcb
+gcb_cleaned <- FindClusters(object = gcb_cleaned, resolution = 1)
+DimPlot(gcb_cleaned, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+basal <- subset(x = gcb_cleaned, idents = c(2))
+goblet <- subset(x = gcb_cleaned, idents = c(1))
+club <- subset(x = gcb_cleaned, idents = c(0, 4))
+
+#goblet+club+basal prep
+Idents(goblet) <- goblet$condition
+goblet.markers <- FindMarkers(goblet,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(goblet.markers, file = "output/goblet.markers.rds")
+saveRDS(goblet, file = "output/goblet")
+
+Idents(basal) <- basal$condition
+basal.markers <- FindMarkers(basal,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(basal.markers, file = "output/basal.markers.rds")
+saveRDS(basal, file = "output/basal")
+
+Idents(club) <- club$condition
+club.markers <- FindMarkers(club,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(club.markers, file = "output/club.markers.rds")
+saveRDS(club, file = "output/club")
+```
+
+```{r normalize, message=FALSE, warning=FALSE}
+#endothelial
+endothelial <- NormalizeData(endothelial, normalization.method = "LogNormalize", scale.factor = 10000)
+endothelial <- FindVariableFeatures(endothelial, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(endothelial)
+endothelial <- ScaleData(endothelial, features = all.genes)
+endothelial <- RunPCA(object = endothelial, verbose = FALSE)
+ElbowPlot(endothelial, ndims = 30)
+endothelial <- FindNeighbors(object = endothelial, dims = 1:20)
+
+#smoothmuscle
+smoothmuscle <- NormalizeData(smoothmuscle, normalization.method = "LogNormalize", scale.factor = 10000)
+smoothmuscle <- FindVariableFeatures(smoothmuscle, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(smoothmuscle)
+smoothmuscle <- ScaleData(smoothmuscle, features = all.genes)
+smoothmuscle <- RunPCA(object = smoothmuscle, verbose = FALSE)
+ElbowPlot(smoothmuscle, ndims = 30)
+smoothmuscle <- FindNeighbors(object = smoothmuscle, dims = 1:20)
+
+#pericyte
+pericyte <- NormalizeData(pericyte, normalization.method = "LogNormalize", scale.factor = 10000)
+pericyte <- FindVariableFeatures(pericyte, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(pericyte)
+pericyte <- ScaleData(pericyte, features = all.genes)
+pericyte <- RunPCA(object = pericyte, verbose = FALSE)
+ElbowPlot(pericyte, ndims = 30)
+pericyte <- FindNeighbors(object = pericyte, dims = 1:20)
+
+#type2pneumocyte
+type2pneumocyte <- NormalizeData(type2pneumocyte, normalization.method = "LogNormalize", scale.factor = 10000)
+type2pneumocyte <- FindVariableFeatures(type2pneumocyte, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(type2pneumocyte)
+type2pneumocyte <- ScaleData(type2pneumocyte, features = all.genes)
+type2pneumocyte <- RunPCA(object = type2pneumocyte, verbose = FALSE)
+ElbowPlot(type2pneumocyte, ndims = 30)
+type2pneumocyte <- FindNeighbors(object = type2pneumocyte, dims = 1:20)
+
+#type1pneumocyte
+type1pneumocyte <- NormalizeData(type1pneumocyte, normalization.method = "LogNormalize", scale.factor = 10000)
+type1pneumocyte <- FindVariableFeatures(type1pneumocyte, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(type1pneumocyte)
+type1pneumocyte <- ScaleData(type1pneumocyte, features = all.genes)
+type1pneumocyte <- RunPCA(object = type1pneumocyte, verbose = FALSE)
+ElbowPlot(type1pneumocyte, ndims = 30)
+type1pneumocyte <- FindNeighbors(object = type1pneumocyte, dims = 1:20)
+
+#ciliated
+ciliated <- NormalizeData(ciliated, normalization.method = "LogNormalize", scale.factor = 10000)
+ciliated <- FindVariableFeatures(ciliated, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(ciliated)
+ciliated <- ScaleData(ciliated, features = all.genes)
+ciliated <- RunPCA(object = ciliated, verbose = FALSE)
+ElbowPlot(ciliated, ndims = 30)
+ciliated <- FindNeighbors(object = ciliated, dims = 1:20)
+
+#mesothelial
+mesothelial <- NormalizeData(mesothelial, normalization.method = "LogNormalize", scale.factor = 10000)
+mesothelial <- FindVariableFeatures(mesothelial, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(mesothelial)
+mesothelial <- ScaleData(mesothelial, features = all.genes)
+mesothelial <- RunPCA(object = mesothelial, verbose = FALSE)
+ElbowPlot(mesothelial, ndims = 30)
+mesothelial <- FindNeighbors(object = mesothelial, dims = 1:20)
+
+#alveolarfibroblast
+alveolarfibroblast <- NormalizeData(alveolarfibroblast, normalization.method = "LogNormalize", scale.factor = 10000)
+alveolarfibroblast <- FindVariableFeatures(alveolarfibroblast, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(alveolarfibroblast)
+alveolarfibroblast <- ScaleData(alveolarfibroblast, features = all.genes)
+alveolarfibroblast <- RunPCA(object = alveolarfibroblast, verbose = FALSE)
+ElbowPlot(alveolarfibroblast, ndims = 30)
+alveolarfibroblast <- FindNeighbors(object = alveolarfibroblast, dims = 1:20)
+
+#adventitialfibroblast
+adventitialfibroblast <- NormalizeData(adventitialfibroblast, normalization.method = "LogNormalize", scale.factor = 10000)
+adventitialfibroblast <- FindVariableFeatures(adventitialfibroblast, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(adventitialfibroblast)
+adventitialfibroblast <- ScaleData(adventitialfibroblast, features = all.genes)
+adventitialfibroblast <- RunPCA(object = adventitialfibroblast, verbose = FALSE)
+ElbowPlot(adventitialfibroblast, ndims = 30)
+adventitialfibroblast <- FindNeighbors(object = adventitialfibroblast, dims = 1:20)
+
+#goblet
+goblet <- NormalizeData(goblet, normalization.method = "LogNormalize", scale.factor = 10000)
+goblet <- FindVariableFeatures(goblet, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(goblet)
+goblet <- ScaleData(goblet, features = all.genes)
+goblet <- RunPCA(object = goblet, verbose = FALSE)
+ElbowPlot(goblet, ndims = 30)
+goblet <- FindNeighbors(object = goblet, dims = 1:20)
+
+#club
+club <- NormalizeData(club, normalization.method = "LogNormalize", scale.factor = 10000)
+club <- FindVariableFeatures(club, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(club)
+club <- ScaleData(club, features = all.genes)
+club <- RunPCA(object = club, verbose = FALSE)
+ElbowPlot(club, ndims = 30)
+club <- FindNeighbors(object = club, dims = 1:20)
+
+#basal
+basal <- NormalizeData(basal, normalization.method = "LogNormalize", scale.factor = 10000)
+basal <- FindVariableFeatures(basal, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(basal)
+basal <- ScaleData(basal, features = all.genes)
+basal <- RunPCA(object = basal, verbose = FALSE)
+ElbowPlot(basal, ndims = 30)
+basal <- FindNeighbors(object = basal, dims = 1:20)
+
+#immune
+immune <- NormalizeData(immune, normalization.method = "LogNormalize", scale.factor = 10000)
+immune <- FindVariableFeatures(immune, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(immune)
+immune <- ScaleData(immune, features = all.genes)
+immune <- RunPCA(object = immune, verbose = FALSE)
+ElbowPlot(immune, ndims = 30)
+immune <- FindNeighbors(object = immune, dims = 1:20)
+
+#capillaryendothelial
+capillaryendothelial <- NormalizeData(capillaryendothelial, normalization.method = "LogNormalize", scale.factor = 10000)
+capillaryendothelial <- FindVariableFeatures(capillaryendothelial, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(capillaryendothelial)
+capillaryendothelial <- ScaleData(capillaryendothelial, features = all.genes)
+capillaryendothelial <- RunPCA(object = capillaryendothelial, verbose = FALSE)
+ElbowPlot(capillaryendothelial, ndims = 30)
+capillaryendothelial <- FindNeighbors(object = capillaryendothelial, dims = 1:20)
+
+#lymphaticendothelial
+lymphaticendothelial <- NormalizeData(lymphaticendothelial, normalization.method = "LogNormalize", scale.factor = 10000)
+lymphaticendothelial <- FindVariableFeatures(lymphaticendothelial, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(lymphaticendothelial)
+lymphaticendothelial <- ScaleData(lymphaticendothelial, features = all.genes)
+lymphaticendothelial <- RunPCA(object = lymphaticendothelial, verbose = FALSE)
+ElbowPlot(lymphaticendothelial, ndims = 30)
+lymphaticendothelial <- FindNeighbors(object = lymphaticendothelial, dims = 1:20)
+
+#peribronchial
+peribronchial <- NormalizeData(peribronchial, normalization.method = "LogNormalize", scale.factor = 10000)
+peribronchial <- FindVariableFeatures(peribronchial, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(peribronchial)
+peribronchial <- ScaleData(peribronchial, features = all.genes)
+peribronchial <- RunPCA(object = peribronchial, verbose = FALSE)
+ElbowPlot(peribronchial, ndims = 30)
+peribronchial <- FindNeighbors(object = peribronchial, dims = 1:20)
+
+#seven
+seven <- NormalizeData(seven, normalization.method = "LogNormalize", scale.factor = 10000)
+seven <- FindVariableFeatures(seven, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(seven)
+seven <- ScaleData(seven, features = all.genes)
+seven <- RunPCA(object = seven, verbose = FALSE)
+ElbowPlot(seven, ndims = 30)
+seven <- FindNeighbors(object = seven, dims = 1:20)
+
+#fourteen
+fourteen <- NormalizeData(fourteen, normalization.method = "LogNormalize", scale.factor = 10000)
+fourteen <- FindVariableFeatures(fourteen, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(fourteen)
+fourteen <- ScaleData(fourteen, features = all.genes)
+fourteen <- RunPCA(object = fourteen, verbose = FALSE)
+ElbowPlot(fourteen, ndims = 30)
+fourteen <- FindNeighbors(object = fourteen, dims = 1:20)
+
+#twentyfive
+twentyfive <- NormalizeData(twentyfive, normalization.method = "LogNormalize", scale.factor = 10000)
+twentyfive <- FindVariableFeatures(twentyfive, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(twentyfive)
+twentyfive <- ScaleData(twentyfive, features = all.genes)
+twentyfive <- RunPCA(object = twentyfive, verbose = FALSE)
+ElbowPlot(twentyfive, ndims = 30)
+twentyfive <- FindNeighbors(object = twentyfive, dims = 1:20)
+```
+
 
 ```{r idents+markers, message=FALSE, warning=FALSE}
 # endothelial
@@ -389,24 +644,37 @@ saveRDS(lymphaticendothelial.markers, file = "output/lymphaticendothelial.marker
 Idents(seven) <- seven$condition
 seven.markers <- FindMarkers(seven,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 saveRDS(seven.markers, file = "output/seven.markers.rds")
+
+# fourteen
+Idents(fourteen) <- fourteen$condition
+fourteen.markers <- FindMarkers(fourteen,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
+
+# twentyfive
+Idents(twentyfive) <- twentyfive$condition
+twentyfive.markers <- FindMarkers(twentyfive,ident.2 = "Control",ident.1 = "GAA KO",min.pct = 0.0,logfc.threshold = 0.01)
 ```
 
 ```{r resave-all-subsets, message=FALSE, warning=FALSE}
-saveRDS(endothelial, file = "output/endothelial")
-saveRDS(smoothmuscle, file = "output/smoothmuscle")
-saveRDS(pericyte, file = "output/pericyte")
-saveRDS(type2pneumocyte, file = "output/type2pneumocyte")
-saveRDS(type1pneumocyte, file = "output/type1pneumocyte")
-saveRDS(ciliated, file = "output/ciliated")
-saveRDS(mesothelial, file = "output/mesothelial")
-saveRDS(adventitialfibroblast, file = "output/adventitialfibroblast")
-saveRDS(alveolarfibroblast, file = "output/alveolarfibroblast")
-saveRDS(gcb, file = "output/gcb")
-saveRDS(immune, file = "output/immune")
+saveRDS(endothelial, file = "output/endothelial.rds")
+saveRDS(smoothmuscle, file = "output/smoothmuscle.rds")
+saveRDS(pericyte, file = "output/pericyte.rds")
+saveRDS(type2pneumocyte, file = "output/type2pneumocyte.rds")
+saveRDS(type1pneumocyte, file = "output/type1pneumocyte.rds")
+saveRDS(ciliated, file = "output/ciliated.rds")
+saveRDS(mesothelial, file = "output/mesothelial.rds")
+saveRDS(adventitialfibroblast, file = "output/adventitialfibroblast.rds")
+saveRDS(alveolarfibroblast, file = "output/alveolarfibroblast.rds")
+saveRDS(goblet, file = "output/goblet.rds")
+saveRDS(club, file = "output/club.rds")
+saveRDS(basal, file = "output/basal.rds")
+saveRDS(immune, file = "output/immune.rds")
 
-saveRDS(capillaryendothelial, file = "output/capillaryendothelial")
-saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial")
-saveRDS(peribronchial, file = "output/peribronchial")
+saveRDS(capillaryendothelial, file = "output/capillaryendothelial.rds")
+saveRDS(lymphaticendothelial, file = "output/lymphaticendothelial.rds")
+saveRDS(peribronchial, file = "output/peribronchial.rds")
+saveRDS(seven, file = "output/seven.rds")
+saveRDS(fourteen, file = "output/fourteen.rds")
+saveRDS(twentyfive, file = "output/twentyfive.rds")
 ```
 
 ```{r volcanoplots, message=FALSE, warning=FALSE}
