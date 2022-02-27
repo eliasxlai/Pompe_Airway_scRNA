@@ -43,6 +43,7 @@ col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 options(stringsAsFactors = FALSE)
 conflict_prefer("union", "BiocGenerics")
 conflict_prefer("slice", "dplyr")
+conflict_prefer("filter", "dplyr")
 ```
 
 ```{r read_in_output_files, message=FALSE, warning=FALSE}
@@ -59,423 +60,38 @@ pericyte.markers <- readRDS("output/pericyte.markers.rds")
 type2pneumocyte.markers <- readRDS("output/type2pneumocyte.markers.rds")
 type1pneumocyte.markers <- readRDS("output/type1pneumocyte.markers.rds")
 ciliated.markers <- readRDS("output/ciliated.markers.rds")
-mesothelial.markers <- readRDS("output/mesothelial.markers.rds")
+club.markers <- readRDS("output/club.markers.rds")
+basal.markers <- readRDS("output/basal.markers.rds")
 alveolarfibroblast.markers <- readRDS("output/alveolarfibroblast.markers.rds")
 adventitialfibroblast.markers <- readRDS("output/adventitialfibroblast.markers.rds")
+ciliated.markers <- readRDS("output/ciliated.markers.rds")
+mesothelial.markers <- readRDS("output/mesothelial.markers.rds")
 gcb.markers <- readRDS("output/gcb.markers.rds")
 immune.markers <- readRDS("output/immune.markers.rds")
 capillaryendothelial.markers <- readRDS("output/capillaryendothelial.markers.rds")
 lymphaticendothelial.markers <- readRDS("output/lymphaticendothelial.markers.rds")
 peribronchial.markers <- readRDS("output/peribronchial.markers.rds")
+peribronchial.markers <- readRDS("output/peribronchial.markers.rds")
 ```
 
-
-```{r read_in_txt_files, message=FALSE, warning=FALSE}
-bmp_genes <- read.table("pathway_txt_files/bmp.txt", header = FALSE, sep = "\n", dec = ".")
-bmp_genes <- slice(bmp_genes, -c(1,2))
-bmp_genes <- bmp_genes[-c(1),]
-bmp_genes <- str_to_title(bmp_genes) 
-
-egf_genes <- read.table("pathway_txt_files/EGF.txt", header = FALSE, sep = "\n", dec = ".")
-egf_genes <- slice(egf_genes, -c(1,2))
-egf_genes <- egf_genes[-c(1),]
-egf_genes <- str_to_title(egf_genes) 
-
-ephb_genes <- read.table("pathway_txt_files/ephb.txt", header = FALSE, sep = "\n", dec = ".")
-ephb_genes <- slice(ephb_genes, -c(1,2))
-ephb_genes <- ephb_genes[-c(1),]
-ephb_genes <- str_to_title(ephb_genes) 
-
-kit_genes <- read.table("pathway_txt_files/kit.txt", header = FALSE, sep = "\n", dec = ".")
-kit_genes <- slice(kit_genes, -c(1,2))
-kit_genes <- kit_genes[-c(1),]
-kit_genes <- str_to_title(kit_genes) 
-
-trail_genes <- read.table("pathway_txt_files/trail.txt", header = FALSE, sep = "\n", dec = ".")
-trail_genes <- slice(trail_genes, -c(1,2))
-trail_genes <- trail_genes[-c(1),]
-trail_genes <- str_to_title(trail_genes)
-
-ptprm_genes <- c("Cdh1", "Ctnnb1", "Ctrnnd1", "Gnb2l1", "Lck", "Mllt4", "Pcsk5", "Pip5k1c", "Ppfibp1", "Ptpra", "Ptprk", "Ptprs", "Pvrl3")
+```{r readspecific}
+type2pneumocyte.markers <- readRDS("output/type2pneumocyte.markers.rds")
+type1pneumocyte.markers <- readRDS("output/type1pneumocyte.markers.rds")
+ciliated.markers <- readRDS("output/ciliated.markers.rds")
+club.markers <- readRDS("output/club.markers.rds")
+basal.markers <- readRDS("output/basal.markers.rds")
+alveolarfibroblast.markers <- readRDS("output/alveolarfibroblast.markers.rds")
+adventitialfibroblast.markers <- readRDS("output/adventitialfibroblast.markers.rds")
+      
+type2pneumocyte <- readRDS("output/type2pneumocyte.markers.rds")
+type1pneumocyte <- readRDS("output/type1pneumocyte.markers.rds")
+ciliated <- readRDS("output/ciliated.markers.rds")
+club <- readRDS("output/club.markers.rds")
+basal <- readRDS("output/basal.markers.rds")
+alveolarfibroblast <- readRDS("output/alveolarfibroblast.markers.rds")
+adventitialfibroblast <- readRDS("output/adventitialfibroblast.markers.rds")
 ```
 
-```{r volcanoplots, message=FALSE, warning=FALSE}
-DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
-EnhancedVolcano(endothelial.markers,
-                title = "Control vs GAA KD, Endothelial",
-                selectLab = ptprm_genes,
-                lab = rownames(endothelial.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(smoothmuscle.markers,
-                title = "Control vs GAA KD, Smooth Muscle",
-                selectLab = ptprm_genes,
-                lab = rownames(smoothmuscle.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(pericyte.markers,
-                title = "Control vs GAA KD, Pericyte",
-                selectLab = ptprm_genes,
-                lab = rownames(pericyte.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(type2pneumocyte.markers,
-                title = "Control vs GAA KD, Type 2 Pneumocyte",
-                selectLab = ptprm_genes,
-                lab = rownames(type2pneumocyte.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(type1pneumocyte.markers,
-                title = "Control vs GAA KD, Type 1 Pneumocyte",
-                selectLab = ptprm_genes,
-                lab = rownames(type1pneumocyte.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(ciliated.markers,
-                title = "Control vs GAA KD, Ciliated",
-                selectLab = ptprm_genes,
-                lab = rownames(ciliated.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(mesothelial.markers,
-                title = "Control vs GAA KD, Mesothelial",
-                selectLab = ptprm_genes,
-                lab = rownames(mesothelial.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(adventitialfibroblast.markers,
-                title = "Control vs GAA KD, Adventitial Fibroblast",
-                selectLab = ptprm_genes,
-                lab = rownames(adventitialfibroblast.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(alveolarfibroblast.markers,
-                title = "Control vs GAA KD, Alveolar Fibroblast",
-                selectLab = ptprm_genes,
-                lab = rownames(alveolarfibroblast.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(gcb.markers,
-                title = "Control vs GAA KD, Goblet+Club+Basal",
-                selectLab = ptprm_genes,
-                lab = rownames(gcb.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(immune.markers,
-                title = "Control vs GAA KD, Immune",
-                selectLab = ptprm_genes,
-                lab = rownames(immune.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(capillaryendothelial.markers,
-                title = "Control vs GAA KD, Capillary Endothelial",
-                selectLab = ptprm_genes,
-                lab = rownames(capillaryendothelial.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(lymphaticendothelial.markers,
-                title = "Control vs GAA KD, Lymphatic Endothelial",
-                selectLab = ptprm_genes,
-                lab = rownames(lymphaticendothelial.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(peribronchial.markers,
-                title = "Control vs GAA KD, Peribronchial",
-                selectLab = ptprm_genes,
-                lab = rownames(peribronchial.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(seven.markers,
-                title = "Control vs GAA KD, Seven",
-                selectLab = bmp_genes,
-                lab = rownames(seven.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = T,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-```
 
 ```{r subset_gcb, message=FALSE, warning=FALSE}
 gcb <- readRDS("output/gcb.rds")
@@ -554,12 +170,1109 @@ saveRDS(club, file = "output/club")
 ```
 
 
+```{r read_in_txt_files, message=FALSE, warning=FALSE}
+bmp_genes <- read.table("pathway_txt_files/bmp.txt", header = FALSE, sep = "\n", dec = ".")
+bmp_genes <- slice(bmp_genes, -c(1,2))
+bmp_genes <- bmp_genes[-c(1),]
+bmp_genes <- str_to_title(bmp_genes) 
+
+egf_genes <- read.table("pathway_txt_files/EGF.txt", header = FALSE, sep = "\n", dec = ".")
+egf_genes <- slice(egf_genes, -c(1,2))
+egf_genes <- egf_genes[-c(1),]
+egf_genes <- str_to_title(egf_genes) 
+
+ephb_genes <- read.table("pathway_txt_files/ephb.txt", header = FALSE, sep = "\n", dec = ".")
+ephb_genes <- slice(ephb_genes, -c(1,2))
+ephb_genes <- ephb_genes[-c(1),]
+ephb_genes <- str_to_title(ephb_genes) 
+
+kit_genes <- read.table("pathway_txt_files/kit.txt", header = FALSE, sep = "\n", dec = ".")
+kit_genes <- slice(kit_genes, -c(1,2))
+kit_genes <- kit_genes[-c(1),]
+kit_genes <- str_to_title(kit_genes) 
+
+trail_genes <- read.table("pathway_txt_files/trail.txt", header = FALSE, sep = "\n", dec = ".")
+trail_genes <- slice(trail_genes, -c(1,2))
+trail_genes <- trail_genes[-c(1),]
+trail_genes <- str_to_title(trail_genes)
+
+ptprm_genes <- c("Cdh1", "Ctnnb1", "Ctrnnd1", "Gnb2l1", "Lck", "Mllt4", "Pcsk5", "Pip5k1c", "Ppfibp1", "Ptpra", "Ptprk", "Ptprs", "Pvrl3")
+
+angpt_genes <- c("Angpt1", "Angpt2")
+```
+
+```{r volcanoplots, message=FALSE, warning=FALSE}
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+EnhancedVolcano(endothelial.markers,
+                title = "Control vs GAA KD, Endothelial",
+                selectLab = egf_genes,
+                lab = rownames(endothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(smoothmuscle.markers,
+                title = "Control vs GAA KD, Smooth Muscle",
+                selectLab = egf_genes,
+                lab = rownames(smoothmuscle.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(pericyte.markers,
+                title = "Control vs GAA KD, Pericyte",
+                selectLab = egf_genes,
+                lab = rownames(pericyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type2pneumocyte.markers,
+                title = "Control vs GAA KD, Type 2 Pneumocyte",
+                selectLab = egf_genes,
+                lab = rownames(type2pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type1pneumocyte.markers,
+                title = "Control vs GAA KD, Type 1 Pneumocyte",
+                selectLab = egf_genes,
+                lab = rownames(type1pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(ciliated.markers,
+                title = "Control vs GAA KD, Ciliated",
+                selectLab = egf_genes,
+                lab = rownames(ciliated.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(mesothelial.markers,
+                title = "Control vs GAA KD, Mesothelial",
+                selectLab = egf_genes,
+                lab = rownames(mesothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(adventitialfibroblast.markers,
+                title = "Control vs GAA KD, Adventitial Fibroblast",
+                selectLab = egf_genes,
+                lab = rownames(adventitialfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(alveolarfibroblast.markers,
+                title = "Control vs GAA KD, Alveolar Fibroblast",
+                selectLab = egf_genes,
+                lab = rownames(alveolarfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(goblet.markers,
+                title = "Control vs GAA KD, Goblet",
+                selectLab = egf_genes,
+                lab = rownames(goblet.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(club.markers,
+                title = "Control vs GAA KD, Club",
+                selectLab = egf_genes,
+                lab = rownames(club.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(basal.markers,
+                title = "Control vs GAA KD, Basal",
+                selectLab = egf_genes,
+                lab = rownames(basal.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(immune.markers,
+                title = "Control vs GAA KD, Immune",
+                selectLab = egf_genes,
+                lab = rownames(immune.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(capillaryendothelial.markers,
+                title = "Control vs GAA KD, Capillary Endothelial",
+                selectLab = egf_genes,
+                lab = rownames(capillaryendothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(lymphaticendothelial.markers,
+                title = "Control vs GAA KD, Lymphatic Endothelial",
+                selectLab = egf_genes,
+                lab = rownames(lymphaticendothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(peribronchial.markers,
+                title = "Control vs GAA KD, Peribronchial",
+                selectLab = egf_genes,
+                lab = rownames(peribronchial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(seven.markers,
+                title = "Control vs GAA KD, Seven",
+                selectLab = egf_genes,
+                lab = rownames(seven.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+```
+
+
+
+
 
 ```{r vln_and_featureplots, message=FALSE, warning=FALSE}
 FeaturePlot(merge, c("Bmpr2"), split.by = "condition")
+VlnPlot(merge, "Bmpr2", split.by = "condition", pt.size = 0)
+
+FeaturePlot(merge, c("Ppp1r15a"), split.by = "condition")
+VlnPlot(merge, "Ppp1r15a", split.by = "condition", pt.size = 0)
+
+FeaturePlot(merge, c("Ppfibp1"), split.by = "condition")
 VlnPlot(merge, "Ppfibp1", split.by = "condition", pt.size = 0)
 ```
 
+```{r full-volcano-plots, message=FALSE, warning=FALSE}
+EnhancedVolcano(type2pneumocyte.markers,
+                title = "Control vs GAA KD, AT2",
+                lab = rownames(type2pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type1pneumocyte.markers,
+                title = "Control vs GAA KD, AT1",
+                lab = rownames(type1pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(adventitialfibroblast.markers,
+                title = "Control vs GAA KD, Adventitial Fibroblast",
+                lab = rownames(adventitialfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(alveolarfibroblast.markers,
+                title = "Control vs GAA KD, Alveolar Fibroblast",
+                lab = rownames(alveolarfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(ciliated.markers,
+                title = "Control vs GAA KD, Ciliated",
+                lab = rownames(ciliated.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(club.markers,
+                title = "Control vs GAA KD, Club",
+                lab = rownames(club.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(basal.markers,
+                title = "Control vs GAA KD, Basal",
+                lab = rownames(basal.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 5.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+```
+
+```{r mergingmarkergenes}
+
+type2pneumocyte.markerscpy <- type2pneumocyte.markers
+type2pneumocyte.markerscpy$celltype <- "type2pneumocyte"
+type2pneumocyte.markerscpy <- type2pneumocyte.markerscpy %>% 
+  filter(p_val < 0.1) %>% 
+  filter(abs(avg_log2FC) > 0.35)
+type2pneumocyte.markerscpy$gene <- rownames(type2pneumocyte.markerscpy)
+rownames(type2pneumocyte.markerscpy) <- NULL
+bmp_genes <- as.data.frame(bmp_genes)
+names(bmp_genes)[1] <- "gene"
+type2pneumocyte.markerscpy <- merge(type2pneumocyte.markerscpy,bmp_genes,by=c("gene"))
+```
+
+```{r filteredgenes}
+bmp_genes_fil <- c("Bmpr2", "Ppp1r15a")
+ptprm_genes_fil <- c("Ppfibp1", "Pcsk5")
+trail_genes_fil <- c("Ripk1", "Tnfrsf10b")
+kit_genes_fil <- c("Stat3", "Tnfrsf10b")
+ephb_genes_fil <- c("Pik3r1", "Efnb2")
+egf_genes_fil <- c("Stat3", "Jun", "Stat1")
+
+bmp_genes_fil <- c("Stat3", "Jun", "Stat1")
+```
+
+
+```{r redovolcano}
+DimPlot(merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+EnhancedVolcano(endothelial.markers,
+                title = "Control vs GAA KD, Endothelial",
+                selectLab = bmp_genes_fil,
+                lab = rownames(endothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(smoothmuscle.markers,
+                title = "Control vs GAA KD, Smooth Muscle",
+                selectLab = bmp_genes_fil,
+                lab = rownames(smoothmuscle.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(pericyte.markers,
+                title = "Control vs GAA KD, Pericyte",
+                selectLab = bmp_genes_fil,
+                lab = rownames(pericyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type2pneumocyte.markers,
+                title = "Control vs GAA KD, Type 2 Pneumocyte",
+                selectLab = bmp_genes_fil,
+                lab = rownames(type2pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type1pneumocyte.markers,
+                title = "Control vs GAA KD, Type 1 Pneumocyte",
+                selectLab = bmp_genes_fil,
+                lab = rownames(type1pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(ciliated.markers,
+                title = "Control vs GAA KD, Ciliated",
+                selectLab = bmp_genes_fil,
+                lab = rownames(ciliated.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(mesothelial.markers,
+                title = "Control vs GAA KD, Mesothelial",
+                selectLab = bmp_genes_fil,
+                lab = rownames(mesothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(adventitialfibroblast.markers,
+                title = "Control vs GAA KD, Adventitial Fibroblast",
+                selectLab = bmp_genes_fil,
+                lab = rownames(adventitialfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(alveolarfibroblast.markers,
+                title = "Control vs GAA KD, Alveolar Fibroblast",
+                selectLab = bmp_genes_fil,
+                lab = rownames(alveolarfibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(goblet.markers,
+                title = "Control vs GAA KD, Goblet",
+                selectLab = bmp_genes_fil,
+                lab = rownames(goblet.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(club.markers,
+                title = "Control vs GAA KD, Club",
+                selectLab = bmp_genes_fil,
+                lab = rownames(club.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(basal.markers,
+                title = "Control vs GAA KD, Basal",
+                selectLab = bmp_genes_fil,
+                lab = rownames(basal.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(immune.markers,
+                title = "Control vs GAA KD, Immune",
+                selectLab = bmp_genes_fil,
+                lab = rownames(immune.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(capillaryendothelial.markers,
+                title = "Control vs GAA KD, Capillary Endothelial",
+                selectLab = bmp_genes_fil,
+                lab = rownames(capillaryendothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(lymphaticendothelial.markers,
+                title = "Control vs GAA KD, Lymphatic Endothelial",
+                selectLab = bmp_genes_fil,
+                lab = rownames(lymphaticendothelial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(peribronchial.markers,
+                title = "Control vs GAA KD, Peribronchial",
+                selectLab = bmp_genes_fil,
+                lab = rownames(peribronchial.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(seven.markers,
+                title = "Control vs GAA KD, Seven",
+                selectLab = bmp_genes_fil,
+                lab = rownames(seven.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = T,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                 drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+FeaturePlot(merge, c("Pik3r1"), split.by = "condition")
+VlnPlot(merge, "Pik3r1", split.by = "condition", pt.size = 0)
+
+FeaturePlot(merge, c("Efnb2"), split.by = "condition")
+VlnPlot(merge, "Efnb2", split.by = "condition", pt.size = 0)
+```
 
 
 
