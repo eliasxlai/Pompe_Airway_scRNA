@@ -50,35 +50,114 @@ conflict_prefer("filter", "dplyr")
 merge <- readRDS("output/merge.rds")
 merge.markers <- readRDS("output/merge.markers.rds")
 
-seven <- readRDS("output/seven.rds")
-seven.markers <- readRDS("output/seven.markers.rds")
-alveolarfibroblast <- readRDS("output/alveolarfibroblast.rds")
-adventitialfibroblast <- readRDS("output/adventitialfibroblast.rds")
-alveolarfibroblast.markers <- readRDS("output/alveolarfibroblast.markers.rds")
-adventitialfibroblast.markers <- readRDS("output/adventitialfibroblast.markers.rds")
+cmp_seven <- readRDS("output/cmp_seven.rds")
+cmp_seven.markers <- readRDS("output/cmp_seven.markers.rds")
 
-fourteen <- readRDS("output/fourteen.rds")
-fourteen.markers <- readRDS("output/fourteen.markers.rds")
-endothelial <- readRDS("output/endothelial.rds")
-endothelial.markers <- readRDS("output/endothelial.markers.rds")
+cmp_fourteen <- readRDS("output/cmp_fourteen.rds")
+cmp_fourteen.markers <- readRDS("output/cmp_fourteen.markers.rds")
 ```
 
-```{r redo_find_markers, message=FALSE, warning=FALSE}
-merge1 <- SplitObject(merge, split.by = "condition")
+```{r split, message=FALSE, warning=FALSE}
+merge_split <- SplitObject(merge, split.by = "condition")
+gaako <- merge_split$`GAA KO`
+control <- merge_split$Control
+
+wt_alveolarfibroblast <- subset(control, idents = 'AlveolarFibroblast')
+ko_seven <- subset(gaako, idents = '7')
+
+wt_endothelial <- subset(control, idents = c("Endothelial", "Endothelial2"))
+ko_fourteen <- subset(gaako, idents = '14')
+
+#recombine
+cmp_seven <- merge(x=wt_alveolarfibroblast,y=ko_seven)
+cmp_fourteen <- merge(x=wt_endothelial,y=ko_fourteen)
+```
+
+```{r redo_prep, message=FALSE, warning=FALSE}
+#seven
+cmp_seven <- NormalizeData(cmp_seven, normalization.method = "LogNormalize", scale.factor = 10000)
+cmp_seven <- FindVariableFeatures(cmp_seven, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(cmp_seven)
+cmp_seven <- ScaleData(cmp_seven, features = all.genes)
+cmp_seven <- RunPCA(object = cmp_seven, verbose = FALSE)
+ElbowPlot(cmp_seven, ndims = 30)
+cmp_seven <- FindNeighbors(object = cmp_seven, dims = 1:20)
+cmp_seven <- FindClusters(object = cmp_seven, resolution = 1)
+cmp_seven <- RunUMAP(object = cmp_seven, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+DimPlot(cmp_seven, reduction = "umap", label = TRUE)
+DimPlot(cmp_seven, reduction = "umap", label = F,group.by = "condition")
+saveRDS(cmp_seven, file = "output/cmp_seven.rds")
+
+#fourteen
+cmp_fourteen <- NormalizeData(cmp_fourteen, normalization.method = "LogNormalize", scale.factor = 10000)
+cmp_fourteen <- FindVariableFeatures(cmp_fourteen, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(cmp_fourteen)
+cmp_fourteen <- ScaleData(cmp_fourteen, features = all.genes)
+cmp_fourteen <- RunPCA(object = cmp_fourteen, verbose = FALSE)
+ElbowPlot(cmp_fourteen, ndims = 30)
+cmp_fourteen <- FindNeighbors(object = cmp_fourteen, dims = 1:20)
+cmp_fourteen <- FindClusters(object = cmp_fourteen, resolution = 1)
+cmp_fourteen <- RunUMAP(object = cmp_fourteen, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+DimPlot(cmp_fourteen, reduction = "umap", label = TRUE)
+DimPlot(cmp_fourteen, reduction = "umap", label = F,group.by = "condition")
+saveRDS(cmp_fourteen, file = "output/cmp_fourteen.rds")
+```
+
+```{r reidentify, message=FALSE, warning=FALSE}
+#seven
+DimPlot(cmp_seven, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+cmp_seven <- RenameIdents(cmp_seven,
+                    '5' = "Seven",
+                    '6' = "Seven",
+                    '0' = "AlveolarFibroblast",
+                    '1' = "AlveolarFibroblast",
+                    '2' = "AlveolarFibroblast",
+                    '3' = "AlveolarFibroblast",
+                    '4' = "AlveolarFibroblast",
+                    '7' = "AlveolarFibroblast",
+                    '8' = "AlveolarFibroblast")
+
+#fourteen
+DimPlot(cmp_fourteen, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+cmp_fourteen <- RenameIdents(cmp_fourteen,
+                    '7' = "Fourteen",
+                    '8' = "Fourteen",
+                    '9' = "Fourteen",
+                    '0' = "Endothelial",
+                    '1' = "Endothelial",
+                    '2' = "Endothelial",
+                    '3' = "Endothelial",
+                    '4' = "Endothelial",
+                    '5' = "Endothelial",
+                    '6' = "Endothelial",
+                    '10' = "Endothelial",
+                    '11' = "Endothelial")
 ```
 
 
-```{r redo_find_markers, message=FALSE, warning=FALSE}
-seven_volcano.markers <- FindMarkers(merge,ident.2 = "AlveolarFibroblast",ident.1 = "7",min.pct = 0.0,logfc.threshold = 0.01)
+```{r refindmarkers, message=FALSE, warning=FALSE}
+#seven
+cmp_seven.markers <- FindMarkers(cmp_seven,
+                                    ident.2 = "AlveolarFibroblast", ident.1 = "Seven")
+saveRDS(cmp_seven.markers, file = "output/cmp_seven.markers.rds")
 
-fourteen_vs_endothelial.markers <- FindMarkers(merge,ident.2 = c("Endothelial", "Endothelial2"),ident.1 = "14",min.pct = 0.0,logfc.threshold = 0.01)
+#fourteen
+cmp_fourteen.markers <- FindMarkers(cmp_fourteen,
+                                    ident.2 = "Endothelial", ident.1 = "Fourteen",
+                                    min.pct = 0.0,logfc.threshold = 0.01)
+saveRDS(cmp_fourteen.markers, file = "output/cmp_fourteen.markers.rds")
+
+cmp_fourteen.markers <- FindMarkers(merge, ident.1 = "14",
+                                    min.pct = 0.2, only.pos = T)
 ```
 
 ```{r EnhancedVolcano, message=FALSE, warning=FALSE}
-EnhancedVolcano(seven_vs_alveolarfibroblast.markers,
-                title = "Control vs GAA KD, Endothelial",
+EnhancedVolcano(cmp_seven.markers,
+                title = "WT Alveolar Fibroblast vs GAAKO Cluster 7",
                 #  selectLab = m$V1,
-                lab = rownames(endothelial.markers),
+                lab = rownames(cmp_seven.markers),
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
@@ -97,13 +176,13 @@ EnhancedVolcano(seven_vs_alveolarfibroblast.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
-EnhancedVolcano(fourteen_vs_endothelial.markers,
-                title = "Control vs GAA KD, Endothelial",
+EnhancedVolcano(cmp_fourteen.markers,
+                title = "WT Endothelial vs GAAKO Cluster 14",
                 #  selectLab = m$V1,
-                lab = rownames(endothelial.markers),
+                lab = rownames(cmp_fourteen.markers),
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
@@ -122,7 +201,7 @@ EnhancedVolcano(fourteen_vs_endothelial.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 ```
 

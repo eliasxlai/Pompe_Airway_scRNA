@@ -1,0 +1,335 @@
+---
+title: "PathwayAnalysis"
+author: "Elias Lai"
+subtitle: ElMallah Lab, Duke University
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = TRUE, comment = NA, 
+                      message = FALSE, warning = FALSE,
+                      fig.height = 6, fig.width = 9, fig.align = "center")
+```
+
+```{r load-packages, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(dplyr)
+library(conflicted)
+library(Seurat)
+library(CellChat)
+library(patchwork)
+library(enrichR)
+library(DropletUtils)
+library(dplyr)
+library(Matrix)
+library(cowplot)
+library(sctransform)
+library(ggplot2)
+library(SoupX)
+library(here)
+library(pheatmap)
+library(biomaRt)
+library(EnhancedVolcano)
+library(slingshot)
+library(RColorBrewer)
+library(scales)
+options(future.globals.maxSize= 8912896000000)
+col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
+conflict_prefer("filter", "dplyr")
+
+clean_merge <- readRDS("output/clean_merge.rds")
+clean_merge.markers <- readRDS("output/clean_merge.markers.rds")
+
+celltypes <- c("T", "B", "AdventitialFibroblast", "AlveolarFibroblast", "Pericyte", "SmoothMuscle", "AT2", "LymphaticEndothelial", "Ciliated", "GCB", "AlveolarFibroblast", "AT1", "AlveolarFibroblast", "Peribronchial", "Mesothelial", "Endothelial", "CapillaryEndothelial")
+
+for (celltype in celltypes) {
+  name <- paste("output/", celltype, ".rds", sep = "")
+  name.markers <- paste("output/", celltype, ".markers.rds", sep = "")
+  temp <- readRDS(name)
+  temp.markers <- readRDS(name.markers)
+  
+  markerfilename <- paste(celltype, ".markers", sep = "")
+  assign(celltype, temp)
+  assign(markerfilename, temp.markers)
+}
+rm(temp, temp.markers)
+```
+
+```{r featureplots}
+DimPlot(clean_merge, reduction = "umap", label = TRUE, pt.size = 0.001, split.by = "condition") + NoLegend()
+# Cluster 3: Alveolar Fibroblast
+FeaturePlot(clean_merge, c("Ces1d", "Npnt", "Wnt2", "Pdgfra"))
+# Cluster #: Adventitial Fibroblast
+FeaturePlot(clean_merge, c("Pi16", "Ccl11", "Il33", "Adh7", "Pdgfra"))
+# Cluster #: Pericyte
+FeaturePlot(clean_merge, c("Pdgfrb", "Cspg4", "Mcam"))
+# Cluster #: Peribronchial Fibroblast
+FeaturePlot(clean_merge, c("Hhip", "Pdgfra", "Fgf18"))
+# Cluster 5: Mesothelial
+FeaturePlot(clean_merge, c("Dcn", "Msln", "Wt1"))
+# Cluster 7: Capillary Endothelial
+FeaturePlot(clean_merge, c("Tmem100", "Ednrb", "Pecam1"))
+# Cluster 8: Smooth Muscle
+FeaturePlot(clean_merge, c("Acta2", "Myh11"))
+# Cluster 9: Type 2 Pneumocytes
+FeaturePlot(clean_merge, c("Sftpc", "Sftpd"))
+# Cluster 15: Lymphatic Endothelial
+FeaturePlot(clean_merge, c("Mmrn1", "Lyve1", "Pecam1"))
+# Cluster 17: Ciliated
+FeaturePlot(clean_merge, c("Foxj1"))
+# Cluster 18: Goblet+Club+Basal
+FeaturePlot(clean_merge, c("Scgb1a1", "Bpifb1"))
+# Cluster 19: Type 1 Pneumocytes
+FeaturePlot(clean_merge, c("Rtkn2"))
+# Cluster #: Peribronchial Fibroblast
+FeaturePlot(clean_merge, c("Hhip", "Pdgfra", "Fgf18"))
+# Cluster 20: B
+FeaturePlot(clean_merge, c("Cd79b", "Ptprc"))
+# Cluster 21: CD8+ T
+FeaturePlot(clean_merge, c("Trbc2", "Cd8b1", "Ly6c2", "Ptprc"))
+```
+
+```{r idclusters}
+clean_merge <- FindClusters(object = clean_merge, resolution = 1)
+clean_merge <- RenameIdents(clean_merge,
+                    '19' = "AdventitialFibroblast",
+                    '4' = "AdventitialFibroblast",
+                    '9' = "AdventitialFibroblast",
+                    '2' = "AlveolarFibroblast",
+                    '3' = "AlveolarFibroblast",
+                    '1' = "AlveolarFibroblast",
+                    '24' = "AlveolarFibroblast",
+                    '18' = "Pericyte",
+                    '12' = "SmoothMuscle",
+                    '8' = "AT2",
+                    '13' = "LymphaticEndothelial",
+                    '14' = "Ciliated",
+                    '16' = "GCB",
+                    '20' = "AT1",
+                    '15' = "CapillaryEndothelial",
+                    '7' = "CapillaryEndothelial",
+                    '25' = "CapillaryEndothelial",
+                    '6' = "Mesothelial",
+                    '17' = "Mesothelial",
+                    '11' = "Peribronchial",
+                    '5' = "Endothelial",
+                    '0' = "Endothelial",
+                    '10' = "Endothelial",
+                    '21' = "T",
+                    '23' = "B")
+DimPlot(clean_merge, reduction = "umap", label = TRUE, pt.size = 0.001) + NoLegend()
+clean_merge <- StashIdent(clean_merge, save.name = "clusters")
+saveRDS(clean_merge, file = "output/clean_merge.rds")
+```
+ 
+
+```{r}
+celltypes <- c("T", "B", "AdventitialFibroblast", "AlveolarFibroblast", "Pericyte", "SmoothMuscle", "AT2", "LymphaticEndothelial", "Ciliated", "GCB", "AlveolarFibroblast", "AT1", "AlveolarFibroblast", "Peribronchial", "Mesothelial", "Endothelial", "CapillaryEndothelial")
+
+for (celltype in celltypes) {
+  temp <- subset(x = clean_merge, idents = celltype)
+  temp <- NormalizeData(temp, normalization.method = "LogNormalize", scale.factor = 10000)
+  temp <- FindVariableFeatures(temp, selection.method = "vst", nfeatures = 2000)
+  all.genes <- rownames(temp)
+  temp <- ScaleData(temp, features = all.genes)
+  temp <- RunPCA(object = temp, verbose = FALSE)
+  ElbowPlot(temp, ndims = 30)
+  temp <- FindNeighbors(object = temp, dims = 1:20)
+  temp <- FindClusters(object = temp, resolution = 1)
+  temp <- RunUMAP(object = temp, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+  temp.markers <- FindMarkers(temp, group.by = "condition", ident.1 = "GAA KO", ident.2 = "Control",min.pct = 0.0,logfc.threshold = 0.01)
+  
+  name <- paste("output/", celltype, ".rds", sep = "")
+  name.markers <- paste("output/", celltype, ".markers.rds", sep = "")
+  saveRDS(temp, file = name)
+  saveRDS(temp.markers, file = name.markers)
+  
+  assign(celltype, temp)
+  rm(temp)
+  rm(celltype)
+}
+```
+
+```{r VlnPlots}
+genes <- c("Ager", "Clic3", "Ndnf")
+genes <- c("Mgp", "Gsn", "Apoe", "Sfrp1", "Gm42418", "Gkn3", "Fth1", "Lgals1", "mt-Co1", "mt-Atp6", "mt-Cytb", "Rarres2", "Tmem158", "mt-Nd1", "mt-Nd2", "Htra1", "Inmt", "Rps21", "Dcn", "Cdh13", "Cst3", "Hba-a1", "Mt1", "Hbb-bs", "Rbp1", "Krt18", "Serpinf1", "Rpl30", "Hspg2", "Igfbp6", "Igfbp6", "Nupr1", "Plvap", "Cd36", "Cd93", "Cdh5", "Lyve1", "Tspan7", "Itga1", "Pltp", "Adgrl4", "Calcrl", "Cdkn1a", "Hpgd", "Foxf1", "Bmpr2", "Ace", "Ptprb", "Adgrf5", "Akap12", "Tspan13", "Thbd", "Clic5", "Aqp1", "Tjp1", "Ctla2a", "Acvrl1", "Ucp2", "Npr3", "Tmem252", "Pakap", "H2-Eb1", "H2-Ab1", "Pxdc1", "Cd74", "Nes", "Prss23", "Lpl", "Cyp1a1", "Ackr3", "Ifi47", "Lrg1", "Slc6a2", "Ifit1", "Cxcl10")
+
+setwd("VlnPlots")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+```
+
+```{r FeaturePlots}
+setwd("FeaturePlots")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+```
+
+```{r VolcanoPlots}
+EnhancedVolcano(AT2.markers,
+                title = "GAA KO vs WT, AT2",
+                #  selectLab = m$V1,
+                lab = rownames(AT2.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE, widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(AT1.markers,
+                title = "GAA KO vs WT, AT1",
+                #  selectLab = m$V1,
+                lab = rownames(AT1.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(B.markers,
+                title = "GAA KS vs WT, B",
+                #  selectLab = m$V1,
+                lab = rownames(B.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(T.markers,
+                title = "GAA KO vs WT, T",
+                #  selectLab = m$V1,
+                lab = rownames(T.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+```
+
+
+```{r forloopwithFilteredMarkers}
+AT2.markers.filtered <- AT2.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+
+AT1.markers.filtered <- AT1.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+
+
+genes <- rownames(AT2.markers.filtered)
+setwd("VlnPlotsFiltered")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("FeaturePlotsFiltered")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+
+genes <- rownames(AT1.markers.filtered)
+setwd("VlnPlotsFiltered")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("FeaturePlotsFiltered")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

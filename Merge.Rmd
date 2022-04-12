@@ -38,6 +38,7 @@ library(RColorBrewer)
 library(scales)
 options(future.globals.maxSize= 8912896000000)
 col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
+conflict_prefer("filter", "dplyr")
 
 # gaa <- readRDS("output/gaa.rds")
 # gaa.markers <- readRDS("output/gaamarkers.rds")
@@ -51,8 +52,11 @@ col_p = c("#F3E5C2","#EFB89A","#EF8F50", "#F5731D","#FA4602","#FE5100")
 
 # merge1 <- readRDS("output/merge1.rds")
 # merge1.markers <- readRDS("output/merge1.markers.rds")
-merge <- readRDS("output/merge.rds")
-merge.markers <- readRDS("output/merge.markers.rds")
+clean_merge <- readRDS("output/clean_merge.rds")
+clean_merge.markers <- readRDS("output/clean_merge.markers.rds")
+
+seven <- readRDS("output/seven.rds")
+seven.markers.markers <- readRDS("output/seven.markers.rds")
 
 
 # matrix1 <- readRDS("output/matrix1.rds")
@@ -62,10 +66,10 @@ merge.markers <- readRDS("output/merge.markers.rds")
 # smoothmuscle.markers <- readRDS("output/smoothmuscle.markers.rds")
 # pericyte <- readRDS("output/pericyte.rds")
 # pericyte.markers <- readRDS("output/pericyte.markers.rds")
-# type2pneumocyte <- readRDS("output/type2pneumocyte.rds")
-# type2pneumocyte.markers <- readRDS("output/type2pneumocyte.markers.rds")
-# type1pneumocyte <- readRDS("output/type1pneumocyte.rds")
-# type1pneumocyte.markers <- readRDS("output/type1pneumocyte.markers.rds")
+type2pneumocyte <- readRDS("output/type2pneumocyte.rds")
+type2pneumocyte.markers <- readRDS("output/type2pneumocyte.markers.rds")
+type1pneumocyte <- readRDS("output/type1pneumocyte.rds")
+type1pneumocyte.markers <- readRDS("output/type1pneumocyte.markers.rds")
 # ciliated <- readRDS("output/ciliated.rds")
 # ciliated.markers <- readRDS("output/ciliated.markers.rds")
 # mesothelial <- readRDS("output/mesothelial.rds")
@@ -1228,6 +1232,128 @@ matrix1 <- matrix1 %>%
 rownames(matrix1) <- NULL
 write.table(matrix1, "cellphonedbfiles/Control_filtered_hcount.csv",row.names=F,sep=',')
 ```
+
+```{r}
+seven.pos.markers <- FindMarkers(merge, ident.1 = "7", only.pos = TRUE, min.pct = 0.20)
+```
+
+```{r}
+EnhancedVolcano(type2pneumocyte.markers,
+                title = "GAA KO vs Control, Type 2 Pneumocyte",
+                #  selectLab = m$V1,
+                lab = rownames(type2pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                xlim = c(-2,2),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(type1pneumocyte.markers,
+                title = "GAA KO vs Control, Type 1 Pneumocyte",
+                # selectLab = c("Pkp3"),
+                lab = rownames(type1pneumocyte.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                #xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = T,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+```
+
+```{r type1pneumocyte-gene-identification}
+type1pneumocyte.markers.filtered <- type1pneumocyte.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+# FeaturePlot(merge, c("Rps19"), split.by = "condition")
+
+setwd("FeaturePlots_from_volcano_genes")
+setwd("type1pneumocyte")
+genes <- row.names(type1pneumocyte.markers.filtered)
+for (gene in genes) {
+  gg <- FeaturePlot(merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_type1pneumocyte.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("..")
+```
+
+```{r type2pneumocyte-gene-identification}
+type2pneumocyte.markers.filtered <- type2pneumocyte.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+# FeaturePlot(merge, c("Rps19"), split.by = "condition")
+
+setwd("FeaturePlots_from_volcano_genes")
+setwd("type2pneumocyte")
+genes <- row.names(type2pneumocyte.markers.filtered)
+for (gene in genes) {
+  gg <- FeaturePlot(merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_type2pneumocyte.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("..")
+```
+
+```{r}
+FeaturePlot(clean_merge, "Ndnf", split.by = "condition")
+VlnPlot(clean_merge, "Ndnf")
+
+FeaturePlot(type1pneumocyte, "Ndnf", split.by = "condition")
+VlnPlot(merge, "Clic3", split.by = "condition")
+
+FeaturePlot(type2pneumocyte, "Mgp", split.by = "condition")
+VlnPlot(merge, "Neat1", split.by = "condition", pt.size = 0)
+```
+
+```{r}
+merge_rm_clusters <- c(7, 14)
+clean_merge <- subset(x = merge, 
+                                     idents = merge_rm_clusters, invert = TRUE)
+
+clean_merge <- NormalizeData(clean_merge, normalization.method = "LogNormalize", scale.factor = 10000)
+clean_merge <- FindVariableFeatures(clean_merge, selection.method = "vst", nfeatures = 2000)
+all.genes <- rownames(clean_merge)
+clean_merge <- ScaleData(clean_merge, features = all.genes)
+clean_merge <- RunPCA(object = clean_merge, verbose = FALSE)
+ElbowPlot(clean_merge, ndims = 30)
+clean_merge <- FindNeighbors(object = clean_merge, dims = 1:20)
+clean_merge <- FindClusters(object = clean_merge, resolution = 1)
+clean_merge <- RunUMAP(object = clean_merge, dims = 1:20,min.dist = 1, n.neighbors = 40, spread = 5, local.connectivity = 20)
+
+
+
+
+```
+
 
 
 
