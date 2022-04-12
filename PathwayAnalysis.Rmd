@@ -207,7 +207,7 @@ EnhancedVolcano(AT1.markers,
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
-                #xlim = c(-1,1),
+                xlim = c(-1,1),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
@@ -222,17 +222,17 @@ EnhancedVolcano(AT1.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = TRUE,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 
-EnhancedVolcano(B.markers,
-                title = "GAA KS vs WT, B",
-                #  selectLab = m$V1,
-                lab = rownames(B.markers),
+EnhancedVolcano(AT1.markers,
+                title = "GAA KO vs WT, AT1",
+                #selectLab = genes,
+                lab = rownames(AT1.markers),
                 x = 'avg_log2FC',
                 y = 'p_val_adj',
                 #ylim = c(0,10),
-                #xlim = c(-1,1),
+                xlim = c(-1,1),
                 xlab = bquote(~Log[2]~ 'fold change'),
                 pCutoff = 10e-2,
                 FCcutoff = 0.35,
@@ -247,32 +247,7 @@ EnhancedVolcano(B.markers,
                 legendPosition = 'left',
                 legendLabSize = 10,
                 legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
-)+NoLegend()
-
-EnhancedVolcano(T.markers,
-                title = "GAA KO vs WT, T",
-                #  selectLab = m$V1,
-                lab = rownames(T.markers),
-                x = 'avg_log2FC',
-                y = 'p_val_adj',
-                #ylim = c(0,10),
-                #xlim = c(-1,1),
-                xlab = bquote(~Log[2]~ 'fold change'),
-                pCutoff = 10e-2,
-                FCcutoff = 0.35,
-                pointSize = 3.0,
-                labSize = 4.5,
-                labCol = 'black',
-                labFace = 'bold',
-                boxedLabels = F,
-                colAlpha = 4/5,
-                legendLabels=c('NS','log2 fold-change','P value',
-                         'P value & log2 fold-change'),
-                legendPosition = 'left',
-                legendLabSize = 10,
-                legendIconSize = 4.0,
-                drawConnectors = F,widthConnectors = 0.75, arrowheads = TRUE
+                drawConnectors = TRUE,widthConnectors = 0.75, arrowheads = TRUE
 )+NoLegend()
 ```
 
@@ -288,37 +263,157 @@ AT1.markers.filtered <- AT1.markers %>%
 
 
 genes <- rownames(AT2.markers.filtered)
-setwd("VlnPlotsFiltered")
+setwd("onlytype2")
 for (gene in genes) {
   gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
-  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
 }
 setwd("..")
-setwd("FeaturePlotsFiltered")
+setwd("onlytype2")
 for (gene in genes) {
   gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
-  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
 }
 setwd("..")
 
 genes <- rownames(AT1.markers.filtered)
-setwd("VlnPlotsFiltered")
+setwd("onlytype1")
 for (gene in genes) {
   gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
-  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
 }
 setwd("..")
-setwd("FeaturePlotsFiltered")
+setwd("onlytype1")
 for (gene in genes) {
   gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
-  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 24, height = 16, units = 'in', dpi = 300, device = "jpeg")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
 }
 setwd("..")
+```
 
+```{r}
+FeaturePlot(clean_merge, "Ager", split.by = "condition")
+FeaturePlot(clean_merge, "Clic3", split.by = "condition")
+FeaturePlot(clean_merge, "Ndnf", split.by = "condition")
+FeaturePlot(clean_merge, "Neat1", split.by = "condition")
+VlnPlot(clean_merge, "Ager", split.by = "condition", pt.size = 0)
+VlnPlot(clean_merge, "Clic3", split.by = "condition", pt.size = 0)
+VlnPlot(clean_merge, "Ndnf", split.by = "condition", pt.size = 0)
+VlnPlot(clean_merge, "Neat1", split.by = "condition", pt.size = 0)
+
+AT2.markers.filtered.rownames <- rownames(AT2.markers.filtered)
 ```
 
 
 
+```{r}
+EnhancedVolcano(AdventitialFibroblast.markers,
+                title = "GAA KO vs WT, AT1",
+                #selectLab = genes,
+                lab = rownames(AdventitialFibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+
+EnhancedVolcano(AlveolarFibroblast.markers,
+                title = "GAA KO vs WT, AT1",
+                #selectLab = genes,
+                lab = rownames(AlveolarFibroblast.markers),
+                x = 'avg_log2FC',
+                y = 'p_val_adj',
+                #ylim = c(0,10),
+                xlim = c(-1,1),
+                xlab = bquote(~Log[2]~ 'fold change'),
+                pCutoff = 10e-2,
+                FCcutoff = 0.35,
+                pointSize = 3.0,
+                labSize = 4.5,
+                labCol = 'black',
+                labFace = 'bold',
+                boxedLabels = F,
+                colAlpha = 4/5,
+                legendLabels=c('NS','log2 fold-change','P value',
+                         'P value & log2 fold-change'),
+                legendPosition = 'left',
+                legendLabSize = 10,
+                legendIconSize = 4.0,
+                drawConnectors = TRUE,widthConnectors = 0.75, arrowheads = TRUE
+)+NoLegend()
+```
+
+```{r forloopwithFilteredMarkers}
+AdventitialFibroblast.markers.filtered <- AdventitialFibroblast.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+
+AlveolarFibroblast.markers.filtered <- AlveolarFibroblast.markers %>% 
+  filter(p_val_adj <= 10e-2) %>% 
+  filter(avg_log2FC >= 0.35)
+
+
+genes <- rownames(AdventitialFibroblast.markers.filtered)
+setwd("onlytype2")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("onlytype2")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+
+genes <- rownames(AlveolarFibroblast.markers.filtered)
+setwd("onlytype1")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("onlytype1")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+```
+
+```{r}
+fibroblast.markers.intersect <- intersect(rownames(AdventitialFibroblast.markers.filtered), rownames(AlveolarFibroblast.markers.filtered))
+
+genes <- fibroblast.markers.intersect
+setwd("onlyfibroblast")
+for (gene in genes) {
+  gg <- VlnPlot(clean_merge, gene, split.by = "condition", pt.size = 0)
+  ggsave(filename=paste0(gene, "_vlnplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+setwd("onlyfibroblast")
+for (gene in genes) {
+  gg <- FeaturePlot(clean_merge, gene, split.by = "condition")
+  ggsave(filename=paste0(gene, "_featureplot.jpeg"), plot=gg, width = 9, height = 6, units = 'in', dpi = 300, device = "jpeg")
+}
+setwd("..")
+```
 
 
 
