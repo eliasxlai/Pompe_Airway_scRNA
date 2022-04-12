@@ -301,6 +301,10 @@ VlnPlot(clean_merge, "Clic3", split.by = "condition", pt.size = 0)
 VlnPlot(clean_merge, "Ndnf", split.by = "condition", pt.size = 0)
 VlnPlot(clean_merge, "Neat1", split.by = "condition", pt.size = 0)
 
+
+VlnPlot(clean_merge, "Gaa", split.by = "condition", pt.size = 0)
+FeaturePlot(clean_merge, "Gaa", split.by = "condition")
+
 AT2.markers.filtered.rownames <- rownames(AT2.markers.filtered)
 ```
 
